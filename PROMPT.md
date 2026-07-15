@@ -59,8 +59,8 @@ Build the full-stack MVP (v1) of Moto Mate — a motorcycle maintenance tracker 
 
 ### Ticket: T008 Dashboard — Upcoming & Overdue Maintenance
 - **Priority:** P1
-- **Status:** Todo
-- **Owner:** Unassigned
+- **Status:** Completed
+- **Owner:** AI Agent
 - **Scope:** **Backend:** Implement DashboardController that queries all active schedules for the user's bikes and returns upcoming (due within configurable threshold), due now, and overdue tasks. For mileage-based tasks, compare against each bike's `current_mileage`. For date-based, compare against current date. **Frontend:** Build the main Dashboard screen with categorized sections: Overdue (red), Due Soon (yellow), Upcoming (green). Each item shows task name, bike, interval info, and how overdue/remaining. Include a quick "Log Service" button per item.
 - **Acceptance Criteria:** Dashboard correctly reflects the state of all schedules across all bikes. Updating mileage on a bike or logging a service immediately refreshes the dashboard.
 - **Validation Steps:** Create a bike with 1000km. Set oil change every 3000km. Dashboard shows "Due in 2000km". Log an oil change. Dashboard shows "Due in 3000km". Change bike mileage to 5000km. Oil change shows as overdue.
@@ -68,8 +68,8 @@ Build the full-stack MVP (v1) of Moto Mate — a motorcycle maintenance tracker 
 
 ### Ticket: T009 Service Log Entry
 - **Priority:** P1
-- **Status:** Todo
-- **Owner:** Unassigned
+- **Status:** Completed
+- **Owner:** AI Agent
 - **Scope:** **Backend:** Implement ServiceLogController to record a maintenance event. Fields: schedule_id, motorcycle_id, performed_at (date), mileage (int), cost (decimal), notes (text), and optionally multiple parts (name, cost, qty). On creation, update the `last_performed_at` and `last_performed_mileage` on the associated schedule. **Frontend:** Build a "Log Service" screen accessible from the dashboard (quick-log) and from the bike detail screen (full form). Include a date picker, mileage input, cost input, notes field, and an optional "Add Parts" inline section.
 - **Acceptance Criteria:** Service log is saved, schedule's last-performed values update, and the dashboard recalculates correctly. Parts can be optionally recorded.
 - **Validation Steps:** Log oil change at 5000km, $25, "Used Motul 10W-40". Schedule shows last performed at 5000km. Dashboard recalcs next due.
