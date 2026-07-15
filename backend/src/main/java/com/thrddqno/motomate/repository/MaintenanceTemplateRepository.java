@@ -13,4 +13,6 @@ public interface MaintenanceTemplateRepository extends JpaRepository<Maintenance
     List<MaintenanceTemplate> findByIsPublic(Boolean isPublic);
     List<MaintenanceTemplate> findByCategory(MaintenanceCategory category);
     List<MaintenanceTemplate> findByCategoryAndIsPublic(MaintenanceCategory category, Boolean isPublic);
+    List<MaintenanceTemplate> findByIsSystem(Boolean isSystem);
+    List<MaintenanceTemplate> findByCreatedByUserId(UUID userId);
 }

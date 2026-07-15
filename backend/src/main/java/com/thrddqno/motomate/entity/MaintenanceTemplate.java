@@ -40,6 +40,9 @@ public class MaintenanceTemplate {
     @Column(name = "default_interval_days")
     private Integer defaultIntervalDays;
 
+    @Column(name = "icon", length = 10)
+    private String icon;
+
     @Column(name = "is_special")
     @Builder.Default
     private Boolean isSpecial = false;
@@ -47,6 +50,13 @@ public class MaintenanceTemplate {
     @Column(name = "is_public")
     @Builder.Default
     private Boolean isPublic = true;
+
+    @Column(name = "is_system")
+    @Builder.Default
+    private Boolean isSystem = true;
+
+    @Column(name = "created_by_user_id")
+    private UUID createdByUserId;
 
     @Column(name = "created_at")
     @Builder.Default
