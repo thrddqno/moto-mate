@@ -44,6 +44,9 @@ public class ServiceLog {
     @Column(name = "date_of_service", nullable = false)
     private LocalDate dateOfService;
 
+    @Column(name = "cost")
+    private java.math.BigDecimal cost;
+
     @Column(name = "notes")
     private String notes;
 
