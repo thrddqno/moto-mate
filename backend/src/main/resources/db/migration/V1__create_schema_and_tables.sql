@@ -102,7 +102,7 @@ CREATE TABLE moto_mate.device_tokens (
 );
 
 CREATE INDEX idx_device_tokens_user_id ON moto_mate.device_tokens(user_id);
-CREATE INDEX idx_device_tokens_token ON moto_mate.device_tokens(token);
+CREATE INDEX idx_dedvice_tokens_token ON moto_mate.device_tokens(token);
 
 -- Notification log table
 CREATE TABLE moto_mate.notification_log (
