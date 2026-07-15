@@ -10,14 +10,21 @@ import {
   Alert,
   ActivityIndicator,
 } from 'react-native';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithCredential } from 'firebase/auth';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { auth } from '../services/firebase';
 import { Colors, Spacing, Typography, BorderRadius } from '../constants/theme';
+
+GoogleSignin.configure({
+  webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
+  offlineAccess: true,
+});
 
 export default function SignInScreen({ navigation }: any) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
 
   const handleSignIn = async () => {
     if (!email.trim() || !password.trim()) {
@@ -37,6 +44,30 @@ export default function SignInScreen({ navigation }: any) {
       Alert.alert('Sign In Failed', msg);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    setGoogleLoading(true);
+    try {
+      await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
+      const userInfo = await GoogleSignin.signIn();
+      const idToken = (userInfo as any)?.data?.idToken || (userInfo as any)?.idToken;
+      if (!idToken) {
+        Alert.alert('Error', 'Failed to get Google ID token');
+        return;
+      }
+      const credential = GoogleAuthProvider.credential(idToken);
+      await signInWithCredential(auth, credential);
+    } catch (err: any) {
+      const msg = err.code === 'SIGN_IN_CANCELLED'
+        ? 'Sign in cancelled'
+        : err.message;
+      if (err.code !== 'SIGN_IN_CANCELLED') {
+        Alert.alert('Google Sign In Failed', msg);
+      }
+    } finally {
+      setGoogleLoading(false);
     }
   };
 
@@ -81,6 +112,24 @@ export default function SignInScreen({ navigation }: any) {
           )}
         </TouchableOpacity>
 
+        <View style={styles.divider}>
+          <View style={styles.dividerLine} />
+          <Text style={styles.dividerText}>or</Text>
+          <View style={styles.dividerLine} />
+        </View>
+
+        <TouchableOpacity
+          style={[styles.googleButton, googleLoading && styles.buttonDisabled]}
+          onPress={handleGoogleSignIn}
+          disabled={googleLoading}
+        >
+          {googleLoading ? (
+            <ActivityIndicator color={Colors.onSurface} />
+          ) : (
+            <Text style={styles.googleButtonText}>Continue with Google</Text>
+          )}
+        </TouchableOpacity>
+
         <TouchableOpacity onPress={() => navigation.navigate('SignUp')}>
           <Text style={styles.link}>
             Don't have an account? <Text style={styles.linkBold}>Sign Up</Text>
@@ -116,6 +165,28 @@ const styles = StyleSheet.create({
   },
   buttonDisabled: { opacity: 0.6 },
   buttonText: { color: Colors.onPrimary, ...Typography.labelLarge },
+  divider: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: Spacing.space16,
+  },
+  dividerLine: { flex: 1, height: 1, backgroundColor: Colors.outlineVariant },
+  dividerText: {
+    ...Typography.bodySmall,
+    color: Colors.outline,
+    marginHorizontal: Spacing.space12,
+  },
+  googleButton: {
+    height: 48,
+    borderRadius: BorderRadius.button,
+    borderWidth: 1,
+    borderColor: Colors.outlineVariant,
+    backgroundColor: Colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: Spacing.space24,
+  },
+  googleButtonText: { ...Typography.labelLarge, color: Colors.onSurface },
   link: { ...Typography.bodyMedium, color: Colors.onSurfaceVariant, textAlign: 'center' },
   linkBold: { color: Colors.primary, fontWeight: '600' },
 });
