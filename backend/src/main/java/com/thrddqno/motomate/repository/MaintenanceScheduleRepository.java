@@ -11,4 +11,5 @@ import java.util.UUID;
 public interface MaintenanceScheduleRepository extends JpaRepository<MaintenanceSchedule, UUID> {
     List<MaintenanceSchedule> findByMotorcycleId(UUID motorcycleId);
     List<MaintenanceSchedule> findByMotorcycleIdAndIsActive(UUID motorcycleId, Boolean isActive);
+    List<MaintenanceSchedule> findByIsActive(Boolean isActive);
 }
