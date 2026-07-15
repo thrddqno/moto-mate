@@ -5,14 +5,17 @@ spring:
     url: jdbc:postgresql://localhost:5432/motomate_dev
     username: ${DB_USERNAME:postgres}
     password: ${DB_PASSWORD:postgres}
-    jpa:
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: true
+    properties:
       hibernate:
-        ddl-auto: validate
-      show-sql: true
-    flyway:
-      enabled: true
-      locations: classpath:db/migration
-      baseline-on-migrate: true
+        default_schema: moto_mate
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
 
 firebase:
   service-account: ${FIREBASE_SERVICE_ACCOUNT_PATH}

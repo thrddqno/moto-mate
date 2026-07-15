@@ -37,15 +37,43 @@ Build the full-stack MVP (v1) of Moto Mate — a motorcycle maintenance tracker 
 
 ## Current Phase
 
-**Phase 1 — Foundation** (T001–T005)
+**Phase 2 — Core Features** (T006–T010)
 
-Start with **T001: Spring Boot Backend Scaffolding**.
+### Ticket: T006 Motorcycle CRUD (Backend + Frontend)
+- **Priority:** P1
+- **Status:** Completed
+- **Owner:** AI Agent
+- **Scope:** **Backend:** Implement MotorcycleController, MotorcycleService, and MotorcycleRepository with full CRUD. Each motorcycle belongs to a user (scoped by Firebase UID). Fields: make, model, year, license_plate (optional), VIN (optional), current_mileage, notes. **Frontend:** Build a "My Bikes" list screen, an "Add Bike" form, and an "Edit Bike" screen. Wire up API calls.
+- **Acceptance Criteria:** User can add, view, edit, and delete their bikes. Deleting soft-deletes. Only the owner's bikes are visible.
+- **Validation Steps:** Add a bike → it appears in list. Edit mileage → changes persist. Delete → bike disappears. Another user's bikes are not visible.
+- **Notes:** Use optimistic UI updates on the frontend for a snappy feel.
 
-```
-T001: Create Spring Boot project with Maven/Gradle,
-      application.yml, package structure, Flyway config,
-      Firebase Admin SDK setup, and health endpoint.
-```
+### Ticket: T007 Maintenance Schedule Assignment
+- **Priority:** P1
+- **Status:** Completed
+- **Owner:** AI Agent
+- **Scope:** **Backend:** Implement ScheduleController, ScheduleService to create/update/delete maintenance schedules linking a template to a bike. Interval types: `MILEAGE`, `DATE`, `BOTH`. When `BOTH`, the next-due is whichever comes first. Add methods to calculate next-due mileage and next-due date based on last-performed values. **Frontend:** Build a "Set Up Maintenance" screen where the user selects a bike, picks from the template list, sets interval type and value, and saves. Display existing schedules for a bike.
+- **Acceptance Criteria:** A schedule can be created with mileage interval, date interval, or both. The backend correctly computes next-due mileage/date. Schedules can be toggled active/inactive.
+- **Validation Steps:** Create schedule "Oil Change every 3000 km" → backend returns `nextDueMileage: currentMileage + 3000`. Change interval to 5000 → nextDue recalculates.
+- **Notes:** The calculation logic should be a pure utility function unit-tested separately.
+
+### Ticket: T008 Dashboard — Upcoming & Overdue Maintenance
+- **Priority:** P1
+- **Status:** Todo
+- **Owner:** Unassigned
+- **Scope:** **Backend:** Implement DashboardController that queries all active schedules for the user's bikes and returns upcoming (due within configurable threshold), due now, and overdue tasks. For mileage-based tasks, compare against each bike's `current_mileage`. For date-based, compare against current date. **Frontend:** Build the main Dashboard screen with categorized sections: Overdue (red), Due Soon (yellow), Upcoming (green). Each item shows task name, bike, interval info, and how overdue/remaining. Include a quick "Log Service" button per item.
+- **Acceptance Criteria:** Dashboard correctly reflects the state of all schedules across all bikes. Updating mileage on a bike or logging a service immediately refreshes the dashboard.
+- **Validation Steps:** Create a bike with 1000km. Set oil change every 3000km. Dashboard shows "Due in 2000km". Log an oil change. Dashboard shows "Due in 3000km". Change bike mileage to 5000km. Oil change shows as overdue.
+- **Notes:** Use pull-to-refresh. Consider a small summary card at the top (total bikes, tasks due this week, total spent).
+
+### Ticket: T009 Service Log Entry
+- **Priority:** P1
+- **Status:** Todo
+- **Owner:** Unassigned
+- **Scope:** **Backend:** Implement ServiceLogController to record a maintenance event. Fields: schedule_id, motorcycle_id, performed_at (date), mileage (int), cost (decimal), notes (text), and optionally multiple parts (name, cost, qty). On creation, update the `last_performed_at` and `last_performed_mileage` on the associated schedule. **Frontend:** Build a "Log Service" screen accessible from the dashboard (quick-log) and from the bike detail screen (full form). Include a date picker, mileage input, cost input, notes field, and an optional "Add Parts" inline section.
+- **Acceptance Criteria:** Service log is saved, schedule's last-performed values update, and the dashboard recalculates correctly. Parts can be optionally recorded.
+- **Validation Steps:** Log oil change at 5000km, $25, "Used Motul 10W-40". Schedule shows last performed at 5000km. Dashboard recalcs next due.
+- **Notes:** Cost is optional. The schedule_id association allows future "did you mean to reset this schedule?" UX.
 
 ---
 
