@@ -53,6 +53,8 @@ hs_err_pid
 replay_pid
 
 firebase-service-account.json
+google-services.json
+GoogleService-Info.plist
 .p12
 .pem
 .key
@@ -60,8 +62,8 @@ firebase-service-account.json
 secrets.yml
 
 .env
-.env.local
-.env.production
+.env.*
+!.env.example
 
 .vertx/
 
