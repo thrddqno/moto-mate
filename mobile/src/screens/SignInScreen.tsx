@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   StyleSheet,
   Text,
@@ -10,21 +10,46 @@ import {
   Alert,
   ActivityIndicator,
 } from 'react-native';
+import * as WebBrowser from 'expo-web-browser';
+import { makeRedirectUri, useAuthRequest, ResponseType } from 'expo-auth-session';
 import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithCredential } from 'firebase/auth';
-import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { auth } from '../services/firebase';
 import { Colors, Spacing, Typography, BorderRadius } from '../constants/theme';
 
-GoogleSignin.configure({
-  webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
-  offlineAccess: true,
-});
+WebBrowser.maybeCompleteAuthSession();
+
+const GOOGLE_DISCOVERY = {
+  authorizationEndpoint: 'https://accounts.google.com/o/oauth2/v2/auth',
+  tokenEndpoint: 'https://oauth2.googleapis.com/token',
+  revocationEndpoint: 'https://oauth2.googleapis.com/revoke',
+};
 
 export default function SignInScreen({ navigation }: any) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [googleLoading, setGoogleLoading] = useState(false);
+
+  const redirectUri = makeRedirectUri({
+    scheme: 'motomate',
+    path: 'oauth2redirect',
+  });
+
+  const [request, response, promptAsync] = useAuthRequest({
+    clientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
+    redirectUri,
+    responseType: ResponseType.IdToken,
+    scopes: ['openid', 'profile', 'email'],
+  }, GOOGLE_DISCOVERY);
+
+  useEffect(() => {
+    if (response?.type === 'success') {
+      const { id_token } = response.params;
+      const credential = GoogleAuthProvider.credential(id_token);
+      signInWithCredential(auth, credential).catch((err: any) => {
+        Alert.alert('Google Sign In Failed', err.message);
+      });
+    }
+  }, [response]);
 
   const handleSignIn = async () => {
     if (!email.trim() || !password.trim()) {
@@ -44,30 +69,6 @@ export default function SignInScreen({ navigation }: any) {
       Alert.alert('Sign In Failed', msg);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleGoogleSignIn = async () => {
-    setGoogleLoading(true);
-    try {
-      await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
-      const userInfo = await GoogleSignin.signIn();
-      const idToken = (userInfo as any)?.data?.idToken || (userInfo as any)?.idToken;
-      if (!idToken) {
-        Alert.alert('Error', 'Failed to get Google ID token');
-        return;
-      }
-      const credential = GoogleAuthProvider.credential(idToken);
-      await signInWithCredential(auth, credential);
-    } catch (err: any) {
-      const msg = err.code === 'SIGN_IN_CANCELLED'
-        ? 'Sign in cancelled'
-        : err.message;
-      if (err.code !== 'SIGN_IN_CANCELLED') {
-        Alert.alert('Google Sign In Failed', msg);
-      }
-    } finally {
-      setGoogleLoading(false);
     }
   };
 
@@ -119,15 +120,11 @@ export default function SignInScreen({ navigation }: any) {
         </View>
 
         <TouchableOpacity
-          style={[styles.googleButton, googleLoading && styles.buttonDisabled]}
-          onPress={handleGoogleSignIn}
-          disabled={googleLoading}
+          style={[styles.googleButton, !request && styles.buttonDisabled]}
+          onPress={() => promptAsync()}
+          disabled={!request}
         >
-          {googleLoading ? (
-            <ActivityIndicator color={Colors.onSurface} />
-          ) : (
-            <Text style={styles.googleButtonText}>Continue with Google</Text>
-          )}
+          <Text style={styles.googleButtonText}>Continue with Google</Text>
         </TouchableOpacity>
 
         <TouchableOpacity onPress={() => navigation.navigate('SignUp')}>
