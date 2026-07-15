@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: motomate_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: motomate_dev
+      POSTGRES_USER: motomate_admin
+      POSTGRES_PASSWORD: motomate_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - motomate_pgdata:/var/lib/postgresql/data
+
+volumes:
+  motomate_pgdata:
