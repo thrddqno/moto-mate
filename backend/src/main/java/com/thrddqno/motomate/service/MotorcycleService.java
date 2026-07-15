@@ -2,17 +2,27 @@ package com.thrddqno.motomate.service;
 
 import com.thrddqno.motomate.dto.request.CreateMotorcycleRequest;
 import com.thrddqno.motomate.dto.request.UpdateMotorcycleRequest;
+import com.thrddqno.motomate.dto.response.MotorcycleDetailResponse;
 import com.thrddqno.motomate.dto.response.MotorcycleResponse;
+import com.thrddqno.motomate.dto.response.ScheduleResponse;
+import com.thrddqno.motomate.dto.response.ServiceLogResponse;
+import com.thrddqno.motomate.entity.MaintenanceSchedule;
 import com.thrddqno.motomate.entity.Motorcycle;
+import com.thrddqno.motomate.entity.ServiceLog;
 import com.thrddqno.motomate.entity.User;
+import com.thrddqno.motomate.enums.IntervalType;
 import com.thrddqno.motomate.exception.ResourceNotFoundException;
+import com.thrddqno.motomate.repository.MaintenanceScheduleRepository;
 import com.thrddqno.motomate.repository.MotorcycleRepository;
+import com.thrddqno.motomate.repository.ServiceLogRepository;
 import com.thrddqno.motomate.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.UUID;
 
@@ -22,6 +32,8 @@ public class MotorcycleService {
 
     private final MotorcycleRepository motorcycleRepository;
     private final UserRepository userRepository;
+    private final MaintenanceScheduleRepository scheduleRepository;
+    private final ServiceLogRepository serviceLogRepository;
 
     public List<MotorcycleResponse> getMotorcyclesByUserId(UUID userId) {
         return motorcycleRepository.findByUserId(userId).stream()
@@ -34,6 +46,81 @@ public class MotorcycleService {
                 .filter(m -> m.getUser().getId().equals(userId))
                 .orElseThrow(() -> new ResourceNotFoundException("Motorcycle not found"));
         return toResponse(motorcycle);
+    }
+
+    public MotorcycleDetailResponse getMotorcycleDetail(UUID motorcycleId, UUID userId) {
+        Motorcycle motorcycle = motorcycleRepository.findById(motorcycleId)
+                .filter(m -> m.getUser().getId().equals(userId))
+                .orElseThrow(() -> new ResourceNotFoundException("Motorcycle not found"));
+        
+        List<MaintenanceSchedule> schedules = scheduleRepository.findByMotorcycleId(motorcycleId);
+        List<ServiceLog> recentLogs = serviceLogRepository.findByMotorcycleId(motorcycleId).stream()
+                .sorted((a, b) -> b.getDateOfService().compareTo(a.getDateOfService()))
+                .limit(10)
+                .toList();
+        
+        int overdueCount = 0;
+        int dueSoonCount = 0;
+        int upcomingCount = 0;
+        
+        for (MaintenanceSchedule schedule : schedules) {
+            if (!schedule.getIsActive()) continue;
+            
+            boolean isOverdue = false;
+            boolean isDueSoon = false;
+            
+            if (schedule.getIntervalType() == IntervalType.MILEAGE || 
+                schedule.getIntervalType() == IntervalType.BOTH) {
+                if (schedule.getNextDueMileage() != null && motorcycle.getCurrentMileage() != null) {
+                    long remainingKm = schedule.getNextDueMileage() - motorcycle.getCurrentMileage();
+                    if (remainingKm <= 0) {
+                        isOverdue = true;
+                    } else if (remainingKm <= schedule.getIntervalMileage() * 0.1) {
+                        isDueSoon = true;
+                    }
+                }
+            }
+            
+            if (schedule.getIntervalType() == IntervalType.DATE || 
+                schedule.getIntervalType() == IntervalType.BOTH) {
+                if (schedule.getNextDueDate() != null) {
+                    long daysUntilDue = ChronoUnit.DAYS.between(LocalDate.now(), schedule.getNextDueDate());
+                    if (daysUntilDue <= 0) {
+                        isOverdue = true;
+                    } else if (daysUntilDue <= 7) {
+                        isDueSoon = true;
+                    }
+                }
+            }
+            
+            if (isOverdue) {
+                overdueCount++;
+            } else if (isDueSoon) {
+                dueSoonCount++;
+            } else {
+                upcomingCount++;
+            }
+        }
+        
+        return MotorcycleDetailResponse.builder()
+                .id(motorcycle.getId())
+                .make(motorcycle.getMake())
+                .model(motorcycle.getModel())
+                .year(motorcycle.getYear())
+                .licensePlate(motorcycle.getLicensePlate())
+                .vin(motorcycle.getVin())
+                .notes(motorcycle.getNotes())
+                .currentMileage(motorcycle.getCurrentMileage())
+                .isActive(motorcycle.getIsActive())
+                .createdAt(motorcycle.getCreatedAt())
+                .updatedAt(motorcycle.getUpdatedAt())
+                .schedules(schedules.stream().map(this::toScheduleResponse).toList())
+                .recentServiceLogs(recentLogs.stream().map(this::toServiceLogResponse).toList())
+                .totalSchedules(schedules.size())
+                .overdueCount(overdueCount)
+                .dueSoonCount(dueSoonCount)
+                .upcomingCount(upcomingCount)
+                .build();
     }
 
     @Transactional
@@ -114,6 +201,40 @@ public class MotorcycleService {
                 .imageUrl(motorcycle.getImageUrl())
                 .createdAt(motorcycle.getCreatedAt())
                 .updatedAt(motorcycle.getUpdatedAt())
+                .build();
+    }
+
+    private ScheduleResponse toScheduleResponse(MaintenanceSchedule schedule) {
+        return ScheduleResponse.builder()
+                .id(schedule.getId())
+                .motorcycleId(schedule.getMotorcycle().getId())
+                .templateId(schedule.getTemplate().getId())
+                .templateName(schedule.getTemplate().getName())
+                .intervalType(schedule.getIntervalType())
+                .intervalMileage(schedule.getIntervalMileage())
+                .intervalDays(schedule.getIntervalDays())
+                .lastServiceMileage(schedule.getLastServiceMileage())
+                .lastServiceDate(schedule.getLastServiceDate())
+                .nextDueMileage(schedule.getNextDueMileage())
+                .nextDueDate(schedule.getNextDueDate())
+                .isActive(schedule.getIsActive())
+                .createdAt(schedule.getCreatedAt())
+                .updatedAt(schedule.getUpdatedAt())
+                .build();
+    }
+
+    private ServiceLogResponse toServiceLogResponse(ServiceLog serviceLog) {
+        return ServiceLogResponse.builder()
+                .id(serviceLog.getId())
+                .scheduleId(serviceLog.getSchedule().getId())
+                .motorcycleId(serviceLog.getMotorcycle().getId())
+                .templateId(serviceLog.getTemplate().getId())
+                .templateName(serviceLog.getTemplate().getName())
+                .mileageAtService(serviceLog.getMileageAtService())
+                .dateOfService(serviceLog.getDateOfService())
+                .cost(serviceLog.getCost())
+                .notes(serviceLog.getNotes())
+                .createdAt(serviceLog.getCreatedAt())
                 .build();
     }
 }
