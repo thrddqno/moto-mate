@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { Platform } from 'react-native';
 
-const BASE_URL = Platform.select({
+const BASE_URL = process.env.EXPO_PUBLIC_API_URL || Platform.select({
   android: 'http://10.0.2.2:8081/api/v1',
   ios: 'http://localhost:8081/api/v1',
   default: 'http://localhost:8081/api/v1',
