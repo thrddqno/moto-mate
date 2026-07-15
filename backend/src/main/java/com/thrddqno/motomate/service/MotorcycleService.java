@@ -185,6 +185,19 @@ public class MotorcycleService {
         motorcycleRepository.save(motorcycle);
     }
 
+    @Transactional
+    public MotorcycleResponse updateMileage(UUID motorcycleId, Integer mileage, UUID userId) {
+        Motorcycle motorcycle = motorcycleRepository.findById(motorcycleId)
+                .filter(m -> m.getUser().getId().equals(userId))
+                .orElseThrow(() -> new ResourceNotFoundException("Motorcycle not found"));
+
+        motorcycle.setCurrentMileage(mileage);
+        motorcycle.setUpdatedAt(Instant.now());
+
+        Motorcycle saved = motorcycleRepository.save(motorcycle);
+        return toResponse(saved);
+    }
+
     private MotorcycleResponse toResponse(Motorcycle motorcycle) {
         return MotorcycleResponse.builder()
                 .id(motorcycle.getId())

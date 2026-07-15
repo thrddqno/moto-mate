@@ -2,6 +2,7 @@ package com.thrddqno.motomate.controller;
 
 import com.thrddqno.motomate.dto.ApiResponse;
 import com.thrddqno.motomate.dto.request.CreateMotorcycleRequest;
+import com.thrddqno.motomate.dto.request.UpdateMileageRequest;
 import com.thrddqno.motomate.dto.request.UpdateMotorcycleRequest;
 import com.thrddqno.motomate.dto.response.MotorcycleResponse;
 import com.thrddqno.motomate.security.CurrentUser;
@@ -33,6 +34,12 @@ public class MotorcycleController {
         return ApiResponse.success("Motorcycle retrieved successfully", motorcycle);
     }
 
+    @GetMapping("/{id}/detail")
+    public ApiResponse<?> getMotorcycleDetail(@PathVariable UUID id, @CurrentUser UUID userId) {
+        var detail = motorcycleService.getMotorcycleDetail(id, userId);
+        return ApiResponse.success("Motorcycle detail retrieved successfully", detail);
+    }
+
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public ApiResponse<MotorcycleResponse> createMotorcycle(@Valid @RequestBody CreateMotorcycleRequest request,
@@ -47,6 +54,14 @@ public class MotorcycleController {
                                                             @CurrentUser UUID userId) {
         MotorcycleResponse motorcycle = motorcycleService.updateMotorcycle(id, request, userId);
         return ApiResponse.success("Motorcycle updated successfully", motorcycle);
+    }
+
+    @PatchMapping("/{id}/mileage")
+    public ApiResponse<MotorcycleResponse> updateMileage(@PathVariable UUID id,
+                                                         @Valid @RequestBody UpdateMileageRequest request,
+                                                         @CurrentUser UUID userId) {
+        MotorcycleResponse motorcycle = motorcycleService.updateMileage(id, request.getMileage(), userId);
+        return ApiResponse.success("Mileage updated successfully", motorcycle);
     }
 
     @DeleteMapping("/{id}")
