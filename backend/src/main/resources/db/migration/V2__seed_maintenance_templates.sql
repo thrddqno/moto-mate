@@ -1,7 +1,7 @@
 -- Seed maintenance templates
--- Insert 18 common motorcycle maintenance tasks
+-- Insert 19 common motorcycle maintenance tasks
 
-INSERT INTO maintenance_templates (id, name, category, description, default_interval_mileage, default_interval_days, is_special, is_public, created_at) VALUES
+INSERT INTO moto_mate.maintenance_templates (id, name, category, description, default_interval_mileage, default_interval_days, is_special, is_public, created_at) VALUES
 -- Engine maintenance
 ('a1b2c3d4-e5f6-7890-abcd-ef1234567801', 'Oil Change', 'ENGINE', 'Regular engine oil change', 3000, NULL, FALSE, TRUE, NOW()),
 ('a1b2c3d4-e5f6-7890-abcd-ef1234567802', 'Spark Plug Replacement', 'ENGINE', 'Replace spark plugs', 12000, NULL, FALSE, TRUE, NOW()),

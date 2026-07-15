@@ -18,8 +18,9 @@ public interface ServiceLogRepository extends JpaRepository<ServiceLog, UUID> {
 
     @Query("SELECT sl FROM ServiceLog sl " +
            "JOIN sl.schedule s " +
+           "JOIN s.motorcycle m " +
            "WHERE sl.motorcycle.id = :motorcycleId " +
-           "AND s.user.id = :userId " +
+           "AND m.user.id = :userId " +
            "AND (:templateName IS NULL OR s.template.name LIKE %:templateName%)")
     Page<ServiceLog> findByMotorcycleIdAndUserIdWithFilter(
             @Param("motorcycleId") UUID motorcycleId,
