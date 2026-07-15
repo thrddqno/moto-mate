@@ -43,6 +43,14 @@ public class User {
     @Builder.Default
     private LocalTime reminderDigestTime = LocalTime.of(8, 0);
 
+    @Column(name = "reminder_threshold_days")
+    @Builder.Default
+    private Integer reminderThresholdDays = 7;
+
+    @Column(name = "reminder_threshold_percent")
+    @Builder.Default
+    private Integer reminderThresholdPercent = 10;
+
     @Column(name = "created_at")
     @Builder.Default
     private Instant createdAt = Instant.now();

@@ -62,6 +62,10 @@ public class MaintenanceSchedule {
     @Builder.Default
     private Boolean isActive = true;
 
+    @Column(name = "notifications_enabled")
+    @Builder.Default
+    private Boolean notificationsEnabled = true;
+
     @Column(name = "created_at")
     @Builder.Default
     private Instant createdAt = Instant.now();
