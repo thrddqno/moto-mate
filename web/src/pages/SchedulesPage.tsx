@@ -13,8 +13,9 @@ function formatScheduleDue(nextDueMileage: number | null, nextDueDate: string | 
 
 export default function SchedulesPage() {
   const { bikeId } = useParams()
-  const { deleteSchedule, error, fetchSchedules, loading, scheduleMap } = useScheduleStore()
+  const { deleteSchedule, error, fetchSchedules, hasMoreMap, loadMoreSchedules, loading, scheduleMap } = useScheduleStore()
   const schedules = bikeId ? scheduleMap[bikeId] || [] : []
+  const hasMore = bikeId ? Boolean(hasMoreMap[bikeId]) : false
 
   useEffect(() => {
     if (bikeId) void fetchSchedules(bikeId)
@@ -66,6 +67,11 @@ export default function SchedulesPage() {
               </div>
             </article>
           ))}
+          {hasMore && bikeId ? (
+            <button className="button button--ghost" disabled={loading} onClick={() => void loadMoreSchedules(bikeId)} type="button">
+              {loading ? 'Loading...' : 'Load More Schedules'}
+            </button>
+          ) : null}
         </div>
       )}
     </main>

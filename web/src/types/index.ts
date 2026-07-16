@@ -15,6 +15,13 @@ export interface PagedResponse<T> {
   last: boolean
 }
 
+export interface CursorPageResponse<T> {
+  content: T[]
+  nextCursor: string | null
+  hasMore: boolean
+  pageSize: number
+}
+
 export type IntervalType = 'MILEAGE' | 'DATE' | 'BOTH'
 
 export type MaintenanceCategory =

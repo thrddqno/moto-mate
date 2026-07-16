@@ -5,7 +5,7 @@ import { useBikeStore } from '../stores/bikeStore'
 import { formatMileage } from '../utils/format'
 
 export default function BikesPage() {
-  const { bikes, error, fetchBikes, loading } = useBikeStore()
+  const { bikes, error, fetchBikes, hasMore, loadMoreBikes, loading } = useBikeStore()
 
   useEffect(() => {
     void fetchBikes()
@@ -55,6 +55,11 @@ export default function BikesPage() {
               <span aria-hidden="true">›</span>
             </Link>
           ))}
+          {hasMore ? (
+            <button className="button button--ghost" disabled={loading} onClick={() => void loadMoreBikes()} type="button">
+              {loading ? 'Loading...' : 'Load More Bikes'}
+            </button>
+          ) : null}
         </div>
       )}
     </main>
