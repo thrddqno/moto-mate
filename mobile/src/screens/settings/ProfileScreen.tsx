@@ -46,7 +46,7 @@ export default function ProfileScreen({ navigation }: Props) {
       <ScrollView contentContainerStyle={styles.scroll}>
         <Card style={styles.profileCard}>
           <View style={[styles.avatar, { backgroundColor: colors.amberDim }]}>
-            <Text style={styles.avatarText}>
+            <Text style={[styles.avatarText, { color: colors.amber }]}>
               {(profile?.displayName || 'R')[0].toUpperCase()}
             </Text>
           </View>

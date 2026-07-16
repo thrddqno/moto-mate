@@ -380,7 +380,7 @@ export default function ScheduleFormScreen({ route, navigation }: Props) {
               <Text style={[styles.sectionLabel, { color: colors.text, marginTop: 20 }]}>
                 INTERVAL TYPE
               </Text>
-              <View style={styles.segmentedControl}>
+              <View style={[styles.segmentedControl, { borderColor: colors.border }]}>
                 {INTERVAL_TYPES.map((type) => (
                   <TouchableOpacity
                     key={type.key}

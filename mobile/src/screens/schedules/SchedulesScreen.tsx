@@ -215,7 +215,7 @@ export default function SchedulesScreen({ route, navigation }: Props) {
       </ScrollView>
 
       <TouchableOpacity
-        style={[styles.fab, { backgroundColor: colors.amber }]}
+        style={[styles.fab, { backgroundColor: colors.amber, shadowColor: colors.amber }]}
         onPress={() => setLogServiceVisible(true)}
         activeOpacity={0.8}
       >

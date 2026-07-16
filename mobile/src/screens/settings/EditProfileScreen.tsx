@@ -114,12 +114,13 @@ export default function EditProfileScreen({ navigation }: Props) {
 
         <View style={styles.fieldGroup}>
           <Text style={[styles.label, { color: colors.textSecondary }]}>UNIT PREFERENCE</Text>
-          <View style={styles.segmentedControl}>
+          <View style={[styles.segmentedControl, { borderColor: colors.border }]}>
             <TouchableOpacity
               style={[
                 styles.segment,
                 {
                   backgroundColor: unitPref === 'km' ? colors.amber : colors.surface,
+                  borderRightColor: colors.border,
                 },
               ]}
               onPress={() => setUnitPref('km')}
@@ -138,6 +139,7 @@ export default function EditProfileScreen({ navigation }: Props) {
                 styles.segment,
                 {
                   backgroundColor: unitPref === 'mi' ? colors.amber : colors.surface,
+                  borderRightColor: colors.border,
                 },
               ]}
               onPress={() => setUnitPref('mi')}
