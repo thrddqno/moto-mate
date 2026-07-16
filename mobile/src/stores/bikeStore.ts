@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import api from '../services/api';
+import { useDashboardStore } from './dashboardStore';
 import type {
   ApiResponse,
   Motorcycle,
@@ -19,6 +20,7 @@ interface BikeStore {
   deleteBike: (id: string) => Promise<void>;
   getBikeDetail: (id: string) => Promise<MotorcycleDetail | null>;
   invalidate: () => void;
+  refreshDashboard: () => void;
 }
 
 export const useBikeStore = create<BikeStore>((set, get) => ({
@@ -41,11 +43,18 @@ export const useBikeStore = create<BikeStore>((set, get) => ({
     }
   },
 
+  refreshDashboard: () => {
+    const dash = useDashboardStore.getState();
+    dash.invalidate();
+    dash.fetchDashboard();
+  },
+
   createBike: async (data) => {
     try {
       const res = await api.post<ApiResponse<Motorcycle>>('/motorcycles', data);
       if (res.data.success && res.data.data) {
         set((state) => ({ bikes: [res.data.data!, ...state.bikes] }));
+        get().refreshDashboard();
         return res.data.data;
       }
       return null;
@@ -61,6 +70,7 @@ export const useBikeStore = create<BikeStore>((set, get) => ({
         set((state) => ({
           bikes: state.bikes.map((b) => (b.id === id ? res.data.data! : b)),
         }));
+        get().refreshDashboard();
         return res.data.data;
       }
       return null;
@@ -73,6 +83,7 @@ export const useBikeStore = create<BikeStore>((set, get) => ({
     try {
       await api.delete(`/motorcycles/${id}`);
       set((state) => ({ bikes: state.bikes.filter((b) => b.id !== id) }));
+      get().refreshDashboard();
     } catch {
       // silent
     }

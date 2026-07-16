@@ -31,7 +31,8 @@ export default function LogServiceModal({ visible, onClose }: LogServiceModalPro
   const insets = useSafeAreaInsets();
   const { bikes, fetchBikes } = useBikeStore();
   const { scheduleMap, fetchSchedules } = useScheduleStore();
-  const { invalidate: invalidateDashboard } = useDashboardStore();
+  const dashboardStore = useDashboardStore();
+  const bikeStore = useBikeStore();
 
   const [step, setStep] = useState<'bike' | 'task' | 'form'>('bike');
   const [selectedBikeId, setSelectedBikeId] = useState<string | null>(null);
@@ -84,7 +85,9 @@ export default function LogServiceModal({ visible, onClose }: LogServiceModalPro
         payload,
       );
       if (res.data.success) {
-        invalidateDashboard();
+        dashboardStore.invalidate();
+        dashboardStore.fetchDashboard();
+        bikeStore.invalidate();
         onClose();
       }
     } catch (err: any) {

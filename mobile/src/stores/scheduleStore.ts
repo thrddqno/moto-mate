@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import api from '../services/api';
+import { useDashboardStore } from './dashboardStore';
 import type {
   ApiResponse,
   Schedule,
@@ -16,6 +17,12 @@ interface ScheduleStore {
   updateSchedule: (motorcycleId: string, scheduleId: string, data: UpdateScheduleRequest) => Promise<Schedule | null>;
   deleteSchedule: (motorcycleId: string, scheduleId: string) => Promise<void>;
   invalidate: (motorcycleId: string) => void;
+}
+
+function refreshDashboard() {
+  const dash = useDashboardStore.getState();
+  dash.invalidate();
+  dash.fetchDashboard();
 }
 
 export const useScheduleStore = create<ScheduleStore>((set) => ({
@@ -56,6 +63,7 @@ export const useScheduleStore = create<ScheduleStore>((set) => ({
             [motorcycleId]: [...(state.scheduleMap[motorcycleId] || []), s],
           },
         }));
+        refreshDashboard();
         return s;
       }
       return null;
@@ -80,6 +88,7 @@ export const useScheduleStore = create<ScheduleStore>((set) => ({
             ),
           },
         }));
+        refreshDashboard();
         return updated;
       }
       return null;
@@ -99,6 +108,7 @@ export const useScheduleStore = create<ScheduleStore>((set) => ({
           ),
         },
       }));
+      refreshDashboard();
     } catch {
       // silent
     }

@@ -29,7 +29,7 @@ export default function MileageModal({ visible, onClose }: MileageModalProps) {
   const { colors, borderRadius } = useTheme();
   const insets = useSafeAreaInsets();
   const { bikes, fetchBikes } = useBikeStore();
-  const { invalidate: invalidateDashboard } = useDashboardStore();
+  const dashboardStore = useDashboardStore();
 
   const [selectedBikeId, setSelectedBikeId] = useState<string | null>(null);
   const [mileage, setMileage] = useState('');
@@ -66,7 +66,8 @@ export default function MileageModal({ visible, onClose }: MileageModalProps) {
         { mileage: parseInt(mileage, 10) },
       );
       if (res.data.success) {
-        invalidateDashboard();
+        dashboardStore.invalidate();
+        dashboardStore.fetchDashboard();
         onClose();
       }
     } catch (err: any) {
