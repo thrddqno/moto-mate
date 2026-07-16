@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   RefreshControl,
   StatusBar,
+  Modal,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -17,6 +18,7 @@ import { MileageDisplay } from '../../components/ui/MileageDisplay';
 import { LoadingState } from '../../components/ui/LoadingState';
 import { ErrorState } from '../../components/ui/ErrorState';
 import LogServiceModal from '../../components/service/LogServiceModal';
+import MileageModal from '../../components/dashboard/MileageModal';
 import { useFocusEffect } from '@react-navigation/native';
 import { useBikeStore } from '../../stores/bikeStore';
 import { formatDate } from '../../utils/format';
@@ -35,7 +37,9 @@ export default function BikeDetailScreen({ route, navigation }: Props) {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showActions, setShowActions] = useState(false);
   const [logServiceVisible, setLogServiceVisible] = useState(false);
+  const [mileageVisible, setMileageVisible] = useState(false);
 
   const fetchBike = useCallback(async () => {
     try {
@@ -152,16 +156,63 @@ export default function BikeDetailScreen({ route, navigation }: Props) {
       </ScrollView>
 
       <TouchableOpacity
-        style={[styles.fab, { backgroundColor: colors.amber }]}
-        onPress={() => setLogServiceVisible(true)}
+        style={[styles.fab, { backgroundColor: colors.amber, shadowColor: colors.amber }]}
+        onPress={() => setShowActions(true)}
         activeOpacity={0.8}
       >
-        <Ionicons name="build" size={24} color={colors.black} />
+        <Ionicons name="add" size={28} color={colors.black} />
       </TouchableOpacity>
+
+      <Modal visible={showActions} transparent animationType="fade">
+        <TouchableOpacity
+          style={styles.actionOverlay}
+          activeOpacity={1}
+          onPress={() => setShowActions(false)}
+        >
+          <View style={[styles.actionSheet, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <Text style={[styles.actionSheetTitle, { color: colors.text }]}>Quick Action</Text>
+
+            <TouchableOpacity
+              style={[styles.actionRow, { borderBottomColor: colors.border }]}
+              onPress={() => { setShowActions(false); setMileageVisible(true); }}
+            >
+              <View style={[styles.actionIcon, { backgroundColor: colors.blueDim }]}>
+                <Ionicons name="speedometer" size={22} color={colors.blue} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.actionLabel, { color: colors.text }]}>Log Mileage</Text>
+                <Text style={[styles.actionHint, { color: colors.textDim }]}>
+                  Update your bike's current mileage
+                </Text>
+              </View>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.actionRow}
+              onPress={() => { setShowActions(false); setLogServiceVisible(true); }}
+            >
+              <View style={[styles.actionIcon, { backgroundColor: colors.amberDim }]}>
+                <Ionicons name="build" size={22} color={colors.amber} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.actionLabel, { color: colors.text }]}>Log Service</Text>
+                <Text style={[styles.actionHint, { color: colors.textDim }]}>
+                  Record a maintenance service
+                </Text>
+              </View>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
 
       <LogServiceModal
         visible={logServiceVisible}
         onClose={() => setLogServiceVisible(false)}
+        preselectedBikeId={bikeId}
+      />
+      <MileageModal
+        visible={mileageVisible}
+        onClose={() => setMileageVisible(false)}
         preselectedBikeId={bikeId}
       />
     </View>
@@ -170,7 +221,7 @@ export default function BikeDetailScreen({ route, navigation }: Props) {
 
 function StatBadge({ label, value, color, colors: c }: { label: string; value: number; color: string; colors: any }) {
   return (
-    <View style={[statStyles.badge, { borderColor: color }]}>
+    <View style={[statStyles.badge, { borderColor: color, backgroundColor: c.surfaceSubtle }]}>
       <Text style={[statStyles.value, { color, fontFamily: 'JetBrainsMono_700Bold' }]}>{value}</Text>
       <Text style={[statStyles.label, { color: c.textDim }]}>{label}</Text>
     </View>
@@ -245,5 +296,44 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.4,
     shadowRadius: 8,
     elevation: 8,
+  },
+  actionOverlay: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    paddingBottom: 100,
+    paddingHorizontal: 20,
+  },
+  actionSheet: {
+    borderRadius: 16,
+    borderWidth: 1,
+    padding: 20,
+  },
+  actionSheetTitle: {
+    fontFamily: 'Karla_700Bold',
+    fontSize: 16,
+    marginBottom: 16,
+  },
+  actionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    gap: 14,
+  },
+  actionIcon: {
+    width: 42,
+    height: 42,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  actionLabel: {
+    fontFamily: 'Karla_600SemiBold',
+    fontSize: 15,
+  },
+  actionHint: {
+    fontFamily: 'Karla_400Regular',
+    fontSize: 12,
+    marginTop: 2,
   },
 });

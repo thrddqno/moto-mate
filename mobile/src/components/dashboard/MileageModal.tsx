@@ -23,9 +23,10 @@ import type { ApiResponse, Motorcycle } from '../../types';
 interface MileageModalProps {
   visible: boolean;
   onClose: () => void;
+  preselectedBikeId?: string;
 }
 
-export default function MileageModal({ visible, onClose }: MileageModalProps) {
+export default function MileageModal({ visible, onClose, preselectedBikeId }: MileageModalProps) {
   const { colors, borderRadius } = useTheme();
   const insets = useSafeAreaInsets();
   const { bikes, fetchBikes } = useBikeStore();
@@ -42,12 +43,17 @@ export default function MileageModal({ visible, onClose }: MileageModalProps) {
   useEffect(() => {
     if (visible) {
       if (bikes.length === 0) fetchBikes();
-      setSelectedBikeId(null);
       setMileage('');
       setDate(new Date().toISOString().split('T')[0]);
-      setShowPicker(true);
+      if (preselectedBikeId) {
+        setSelectedBikeId(preselectedBikeId);
+        setShowPicker(false);
+      } else {
+        setSelectedBikeId(null);
+        setShowPicker(true);
+      }
     }
-  }, [visible]);
+  }, [visible, preselectedBikeId]);
 
   async function handleSave() {
     if (!selectedBikeId) {

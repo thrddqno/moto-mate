@@ -125,7 +125,7 @@ export default function DashboardScreen() {
       </ScrollView>
 
       <TouchableOpacity
-        style={[styles.fab, { backgroundColor: colors.amber }]}
+        style={[styles.fab, { backgroundColor: colors.amber, shadowColor: colors.amber }]}
         onPress={() => setShowActions(true)}
         activeOpacity={0.8}
       >
@@ -134,7 +134,7 @@ export default function DashboardScreen() {
 
       <Modal visible={showActions} transparent animationType="fade">
         <TouchableOpacity
-          style={styles.actionOverlay}
+          style={[styles.actionOverlay, { backgroundColor: colors.overlay }]}
           activeOpacity={1}
           onPress={() => setShowActions(false)}
         >
