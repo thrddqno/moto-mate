@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   View,
   Text,
@@ -16,9 +16,11 @@ import { StatusDot } from '../../components/ui/StatusDot';
 import { MileageDisplay } from '../../components/ui/MileageDisplay';
 import { LoadingState } from '../../components/ui/LoadingState';
 import { ErrorState } from '../../components/ui/ErrorState';
+import LogServiceModal from '../../components/service/LogServiceModal';
+import { useFocusEffect } from '@react-navigation/native';
 import { useBikeStore } from '../../stores/bikeStore';
 import { formatDate } from '../../utils/format';
-import type { MotorcycleDetail, Schedule } from '../../types';
+import type { MotorcycleDetail } from '../../types';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { BikesStackParamList } from '../../navigation/BikesStack';
 
@@ -33,8 +35,9 @@ export default function BikeDetailScreen({ route, navigation }: Props) {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [logServiceVisible, setLogServiceVisible] = useState(false);
 
-  async function fetchBike() {
+  const fetchBike = useCallback(async () => {
     try {
       setError(null);
       const detail = await getBikeDetail(bikeId);
@@ -49,11 +52,13 @@ export default function BikeDetailScreen({ route, navigation }: Props) {
       setLoading(false);
       setRefreshing(false);
     }
-  }
+  }, [bikeId, getBikeDetail]);
 
-  useEffect(() => {
-    fetchBike();
-  }, [bikeId]);
+  useFocusEffect(
+    useCallback(() => {
+      fetchBike();
+    }, [fetchBike]),
+  );
 
   function onRefresh() {
     setRefreshing(true);
@@ -85,82 +90,87 @@ export default function BikeDetailScreen({ route, navigation }: Props) {
 
         <Card style={styles.heroCard}>
           <View style={styles.heroTop}>
-            <View>
-              <Text style={[styles.heroName, { color: colors.text }]}>{bike.name}</Text>
-              <Text style={[styles.heroMeta, { color: colors.textDim }]}>
-                {bike.make} {bike.model} · {bike.year}
-              </Text>
-            </View>
+            <Text style={[styles.heroName, { color: colors.text }]}>{bike.name}</Text>
+            <Text style={[styles.heroMeta, { color: colors.textDim }]}>
+              {bike.make} {bike.model} · {bike.year}
+            </Text>
           </View>
           <View style={styles.mileageRow}>
-            <MileageDisplay mileage={bike.currentMileage} size="lg" color={colors.amber} />
-            <Text style={[styles.odometerLabel, { color: colors.textDim }]}>CURRENT MILEAGE</Text>
+            <MileageDisplay mileage={bike.currentMileage} size="md" color={colors.amber} />
           </View>
           {bike.licensePlate && (
             <Text style={[styles.plate, { color: colors.textSecondary }]}>{bike.licensePlate}</Text>
           )}
         </Card>
 
-        <View style={styles.statsRow}>
-          <StatBadge label="Overdue" value={bike.overdueCount} color={colors.red} colors={colors} />
-          <StatBadge label="Due Soon" value={bike.dueSoonCount} color={colors.amber} colors={colors} />
-          <StatBadge label="Upcoming" value={bike.upcomingCount} color={colors.green} colors={colors} />
-        </View>
+        <TouchableOpacity
+          activeOpacity={0.7}
+          onPress={() => navigation.navigate('SchedulesList', { bikeId })}
+          style={[styles.scheduleNav, { borderColor: colors.border }]}
+        >
+          <View style={styles.scheduleNavTop}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <StatusDot status={bike.overdueCount > 0 ? 'overdue' : bike.dueSoonCount > 0 ? 'due-soon' : 'upcoming'} size={8} />
+              <Text style={[styles.scheduleNavTitle, { color: colors.text }]}>SCHEDULES</Text>
+              <Text style={[styles.scheduleCount, { color: colors.textDim }]}>{bike.totalSchedules}</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color={colors.textDim} />
+          </View>
+          <View style={styles.statsRow}>
+            <StatBadge label="Overdue" value={bike.overdueCount} color={colors.red} colors={colors} />
+            <StatBadge label="Due Soon" value={bike.dueSoonCount} color={colors.amber} colors={colors} />
+            <StatBadge label="Upcoming" value={bike.upcomingCount} color={colors.green} colors={colors} />
+          </View>
+        </TouchableOpacity>
 
         <View style={styles.sectionHeaderRow}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>SCHEDULES</Text>
-          <TouchableOpacity
-            onPress={() => navigation.navigate('ScheduleForm', { bikeId })}
-            style={[styles.addBtn, { borderColor: colors.amber }]}
-          >
-            <Ionicons name="add" size={16} color={colors.amber} />
-            <Text style={[styles.addBtnText, { color: colors.amber }]}>Add</Text>
-          </TouchableOpacity>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>SERVICE HISTORY</Text>
         </View>
 
-        {bike.schedules.length === 0 ? (
+        {bike.recentServiceLogs.length === 0 ? (
           <Card style={styles.emptyCard}>
+            <Text style={[styles.emptyIcon]}>🔧</Text>
             <Text style={[styles.emptyText, { color: colors.textDim }]}>
-              No schedules yet. Add a maintenance schedule to start tracking.
+              No service logs yet
+            </Text>
+            <Text style={[styles.emptySubtext, { color: colors.textSecondary }]}>
+              Record maintenance services to build your bike's history
             </Text>
           </Card>
         ) : (
-          bike.schedules.map((schedule) => (
-            <TouchableOpacity
-              key={schedule.id}
-              activeOpacity={0.7}
-              onPress={() => navigation.navigate('ScheduleForm', { bikeId, schedule })}
-            >
-              <ScheduleCard schedule={schedule} colors={colors} />
-            </TouchableOpacity>
+          bike.recentServiceLogs.map((log) => (
+            <View key={log.id} style={[styles.logRow, { borderBottomColor: colors.border }]}>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.logName, { color: colors.text }]}>{log.templateName}</Text>
+                <Text style={[styles.logMeta, { color: colors.textDim }]}>
+                  {formatDate(log.dateOfService)} · {log.mileageAtService.toLocaleString()} km
+                </Text>
+              </View>
+            </View>
           ))
         )}
-
-        {bike.recentServiceLogs.length > 0 && (
-          <>
-            <Text style={[styles.sectionTitle, { color: colors.text, marginTop: 24 }]}>
-              RECENT SERVICE
-            </Text>
-            {bike.recentServiceLogs.map((log) => (
-              <View key={log.id} style={[styles.logRow, { borderBottomColor: colors.border }]}>
-                <View style={{ flex: 1 }}>
-                  <Text style={[styles.logName, { color: colors.text }]}>{log.templateName}</Text>
-                  <Text style={[styles.logMeta, { color: colors.textDim }]}>
-                    {formatDate(log.dateOfService)} · {log.mileageAtService.toLocaleString()} km
-                  </Text>
-                </View>
-              </View>
-            ))}
-          </>
-        )}
       </ScrollView>
+
+      <TouchableOpacity
+        style={[styles.fab, { backgroundColor: colors.amber }]}
+        onPress={() => setLogServiceVisible(true)}
+        activeOpacity={0.8}
+      >
+        <Ionicons name="build" size={24} color={colors.black} />
+      </TouchableOpacity>
+
+      <LogServiceModal
+        visible={logServiceVisible}
+        onClose={() => setLogServiceVisible(false)}
+        preselectedBikeId={bikeId}
+      />
     </View>
   );
 }
 
 function StatBadge({ label, value, color, colors: c }: { label: string; value: number; color: string; colors: any }) {
   return (
-    <View style={[statStyles.badge, { borderColor: color, backgroundColor: c.surface, borderRadius: 12, borderWidth: 1 }]}>
+    <View style={[statStyles.badge, { borderColor: color }]}>
       <Text style={[statStyles.value, { color, fontFamily: 'JetBrainsMono_700Bold' }]}>{value}</Text>
       <Text style={[statStyles.label, { color: c.textDim }]}>{label}</Text>
     </View>
@@ -168,85 +178,51 @@ function StatBadge({ label, value, color, colors: c }: { label: string; value: n
 }
 
 const statStyles = StyleSheet.create({
-  badge: { flex: 1, alignItems: 'center', paddingVertical: 12, marginHorizontal: 4 },
-  value: { fontSize: 22, letterSpacing: -1 },
-  label: { fontFamily: 'Karla_600SemiBold', fontSize: 10, letterSpacing: 1, marginTop: 4 },
-});
-
-function ScheduleCard({ schedule, colors: c }: { schedule: Schedule; colors: any }) {
-  return (
-    <Card style={scheduleStyles.card}>
-      <View style={scheduleStyles.top}>
-        <Text style={[scheduleStyles.name, { color: c.text }]}>{schedule.templateName}</Text>
-        <Ionicons name="chevron-forward" size={16} color={c.textDim} />
-      </View>
-      <View style={scheduleStyles.details}>
-        {schedule.intervalType !== 'DATE' && schedule.nextDueMileage != null && (
-          <Text style={[scheduleStyles.detail, { color: c.textDim }]}>
-            Due at {schedule.nextDueMileage.toLocaleString()} km
-          </Text>
-        )}
-        {schedule.intervalType !== 'MILEAGE' && schedule.nextDueDate && (
-          <Text style={[scheduleStyles.detail, { color: c.textDim }]}>
-            Due {formatDate(schedule.nextDueDate)}
-          </Text>
-        )}
-        <Text style={[scheduleStyles.interval, { color: c.green }]}>
-          Every {schedule.intervalMileage ? `${schedule.intervalMileage.toLocaleString()} km` : ''}
-          {schedule.intervalMileage && schedule.intervalDays ? ' / ' : ''}
-          {schedule.intervalDays ? `${schedule.intervalDays} days` : ''}
-        </Text>
-      </View>
-    </Card>
-  );
-}
-
-const scheduleStyles = StyleSheet.create({
-  card: { marginBottom: 8, paddingVertical: 14 },
-  top: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  name: { fontFamily: 'Karla_600SemiBold', fontSize: 15 },
-  details: { marginTop: 6 },
-  detail: { fontFamily: 'Karla_400Regular', fontSize: 13, marginTop: 2 },
-  interval: { fontFamily: 'JetBrainsMono_500Medium', fontSize: 11, marginTop: 4 },
+  badge: { flex: 1, alignItems: 'center', paddingVertical: 8, borderWidth: 1, borderRadius: 8, marginHorizontal: 3, backgroundColor: 'rgba(255,255,255,0.03)' },
+  value: { fontSize: 18, letterSpacing: -1 },
+  label: { fontFamily: 'Karla_600SemiBold', fontSize: 9, letterSpacing: 0.8, marginTop: 2 },
 });
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  scroll: { paddingHorizontal: 16, paddingBottom: 32 },
+  scroll: { paddingHorizontal: 16, paddingBottom: 96 },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingTop: 16,
-    marginBottom: 16,
+    marginBottom: 12,
   },
-  heroCard: { marginBottom: 16, paddingVertical: 20 },
-  heroTop: { marginBottom: 16 },
-  heroName: { fontFamily: 'Audiowide_400Regular', fontSize: 22, letterSpacing: 1 },
-  heroMeta: { fontFamily: 'Karla_400Regular', fontSize: 14, marginTop: 4 },
-  mileageRow: { alignItems: 'center', paddingVertical: 12 },
-  odometerLabel: { fontFamily: 'Karla_700Bold', fontSize: 10, letterSpacing: 1.5, marginTop: 4 },
-  plate: { fontFamily: 'JetBrainsMono_500Medium', fontSize: 14, marginTop: 8, textAlign: 'center' },
-  statsRow: { flexDirection: 'row', marginBottom: 24 },
-  sectionHeaderRow: {
+  heroCard: { marginBottom: 12, paddingVertical: 14 },
+  heroTop: { marginBottom: 8 },
+  heroName: { fontFamily: 'Audiowide_400Regular', fontSize: 20, letterSpacing: 1 },
+  heroMeta: { fontFamily: 'Karla_400Regular', fontSize: 13, marginTop: 2 },
+  mileageRow: { alignItems: 'center', paddingVertical: 8 },
+  plate: { fontFamily: 'JetBrainsMono_500Medium', fontSize: 13, marginTop: 6, textAlign: 'center' },
+  scheduleNav: {
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    marginBottom: 20,
+  },
+  scheduleNavTop: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 12,
   },
-  sectionTitle: { fontFamily: 'Karla_700Bold', fontSize: 12, letterSpacing: 1.5 },
-  addBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderRadius: 16,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    gap: 4,
+  scheduleNavTitle: { fontFamily: 'Karla_700Bold', fontSize: 13, letterSpacing: 1.5 },
+  scheduleCount: { fontFamily: 'JetBrainsMono_700Bold', fontSize: 11 },
+  statsRow: { flexDirection: 'row' },
+  sectionHeaderRow: {
+    marginBottom: 12,
   },
-  addBtnText: { fontFamily: 'Karla_600SemiBold', fontSize: 12 },
-  emptyCard: { alignItems: 'center', paddingVertical: 24 },
-  emptyText: { fontFamily: 'Karla_400Regular', fontSize: 14, textAlign: 'center' },
+  sectionTitle: { fontFamily: 'Karla_700Bold', fontSize: 12, letterSpacing: 1.5 },
+  emptyCard: { alignItems: 'center', paddingVertical: 28 },
+  emptyIcon: { fontSize: 32, marginBottom: 12 },
+  emptyText: { fontFamily: 'Karla_600SemiBold', fontSize: 15, textAlign: 'center' },
+  emptySubtext: { fontFamily: 'Karla_400Regular', fontSize: 13, textAlign: 'center', marginTop: 6, maxWidth: 220 },
   logRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -255,4 +231,19 @@ const styles = StyleSheet.create({
   },
   logName: { fontFamily: 'Karla_600SemiBold', fontSize: 14 },
   logMeta: { fontFamily: 'Karla_400Regular', fontSize: 12, marginTop: 2 },
+  fab: {
+    position: 'absolute',
+    bottom: 24,
+    right: 20,
+    width: 56,
+    height: 56,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#FFB300',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
+    elevation: 8,
+  },
 });
