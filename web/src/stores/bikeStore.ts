@@ -18,6 +18,7 @@ interface BikeStore {
   hasMore: boolean
   fetchBikes: () => Promise<void>
   loadMoreBikes: () => Promise<void>
+  updateMileage: (id: string, mileage: number) => Promise<Motorcycle | null>
   createBike: (data: CreateMotorcycleRequest) => Promise<Motorcycle | null>
   updateBike: (id: string, data: UpdateMotorcycleRequest) => Promise<Motorcycle | null>
   deleteBike: (id: string) => Promise<void>
@@ -77,6 +78,18 @@ export const useBikeStore = create<BikeStore>((set) => ({
     const res = await api.post<ApiResponse<Motorcycle>>('/motorcycles', data)
     if (res.data.success && res.data.data) {
       set((state) => ({ bikes: [res.data.data!, ...state.bikes] }))
+      useDashboardStore.getState().invalidate()
+      return res.data.data
+    }
+    return null
+  },
+
+  updateMileage: async (id, mileage) => {
+    const res = await api.patch<ApiResponse<Motorcycle>>(`/motorcycles/${id}/mileage`, { mileage })
+    if (res.data.success && res.data.data) {
+      set((state) => ({
+        bikes: state.bikes.map((bike) => (bike.id === id ? res.data.data! : bike)),
+      }))
       useDashboardStore.getState().invalidate()
       return res.data.data
     }
