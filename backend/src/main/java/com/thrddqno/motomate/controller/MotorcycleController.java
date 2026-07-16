@@ -4,6 +4,7 @@ import com.thrddqno.motomate.dto.ApiResponse;
 import com.thrddqno.motomate.dto.request.CreateMotorcycleRequest;
 import com.thrddqno.motomate.dto.request.UpdateMileageRequest;
 import com.thrddqno.motomate.dto.request.UpdateMotorcycleRequest;
+import com.thrddqno.motomate.dto.response.CursorPageResponse;
 import com.thrddqno.motomate.dto.response.MotorcycleResponse;
 import com.thrddqno.motomate.security.CurrentUser;
 import com.thrddqno.motomate.service.MotorcycleService;
@@ -23,8 +24,11 @@ public class MotorcycleController {
     private final MotorcycleService motorcycleService;
 
     @GetMapping
-    public ApiResponse<List<MotorcycleResponse>> getMotorcycles(@CurrentUser UUID userId) {
-        List<MotorcycleResponse> motorcycles = motorcycleService.getMotorcyclesByUserId(userId);
+    public ApiResponse<CursorPageResponse<MotorcycleResponse>> getMotorcycles(
+            @CurrentUser UUID userId,
+            @RequestParam(required = false) String cursor,
+            @RequestParam(defaultValue = "20") int size) {
+        CursorPageResponse<MotorcycleResponse> motorcycles = motorcycleService.getMotorcyclesByUserId(userId, cursor, size);
         return ApiResponse.success("Motorcycles retrieved successfully", motorcycles);
     }
 

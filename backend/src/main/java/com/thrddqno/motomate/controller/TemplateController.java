@@ -2,6 +2,7 @@ package com.thrddqno.motomate.controller;
 
 import com.thrddqno.motomate.dto.ApiResponse;
 import com.thrddqno.motomate.dto.request.CreateTemplateRequest;
+import com.thrddqno.motomate.dto.response.CursorPageResponse;
 import com.thrddqno.motomate.dto.response.TemplateResponse;
 import com.thrddqno.motomate.enums.MaintenanceCategory;
 import com.thrddqno.motomate.security.CurrentUser;
@@ -22,10 +23,12 @@ public class TemplateController {
     private final TemplateService templateService;
 
     @GetMapping
-    public ApiResponse<List<TemplateResponse>> getTemplates(
+    public ApiResponse<CursorPageResponse<TemplateResponse>> getTemplates(
             @CurrentUser UUID userId,
-            @RequestParam(required = false) MaintenanceCategory category) {
-        List<TemplateResponse> templates = templateService.getTemplates(userId, category);
+            @RequestParam(required = false) MaintenanceCategory category,
+            @RequestParam(required = false) String cursor,
+            @RequestParam(defaultValue = "20") int size) {
+        CursorPageResponse<TemplateResponse> templates = templateService.getTemplates(userId, category, cursor, size);
         return ApiResponse.success("Templates retrieved successfully", templates);
     }
 

@@ -2,6 +2,7 @@ package com.thrddqno.motomate.controller;
 
 import com.thrddqno.motomate.dto.ApiResponse;
 import com.thrddqno.motomate.dto.request.CreateServiceLogRequest;
+import com.thrddqno.motomate.dto.response.CursorPageResponse;
 import com.thrddqno.motomate.dto.response.PagedResponse;
 import com.thrddqno.motomate.dto.response.ServiceLogResponse;
 import com.thrddqno.motomate.security.CurrentUser;
@@ -22,9 +23,14 @@ public class ServiceLogController {
     private final ServiceLogService serviceLogService;
 
     @GetMapping
-    public ApiResponse<List<ServiceLogResponse>> getServiceLogs(@PathVariable UUID motorcycleId,
-                                                                @CurrentUser UUID userId) {
-        List<ServiceLogResponse> logs = serviceLogService.getServiceLogsByMotorcycleId(motorcycleId, userId);
+    public ApiResponse<CursorPageResponse<ServiceLogResponse>> getServiceLogs(
+            @PathVariable UUID motorcycleId,
+            @CurrentUser UUID userId,
+            @RequestParam(required = false) String templateName,
+            @RequestParam(required = false) String cursor,
+            @RequestParam(defaultValue = "20") int size) {
+        CursorPageResponse<ServiceLogResponse> logs = serviceLogService.getServiceLogsKeyset(
+                motorcycleId, userId, templateName, cursor, size);
         return ApiResponse.success("Service logs retrieved successfully", logs);
     }
 

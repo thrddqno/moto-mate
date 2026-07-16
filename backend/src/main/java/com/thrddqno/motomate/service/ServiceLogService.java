@@ -1,6 +1,7 @@
 package com.thrddqno.motomate.service;
 
 import com.thrddqno.motomate.dto.request.CreateServiceLogRequest;
+import com.thrddqno.motomate.dto.response.CursorPageResponse;
 import com.thrddqno.motomate.dto.response.PagedResponse;
 import com.thrddqno.motomate.dto.response.ServiceLogResponse;
 import com.thrddqno.motomate.entity.MaintenanceSchedule;
@@ -10,6 +11,7 @@ import com.thrddqno.motomate.exception.ResourceNotFoundException;
 import com.thrddqno.motomate.repository.MaintenanceScheduleRepository;
 import com.thrddqno.motomate.repository.MotorcycleRepository;
 import com.thrddqno.motomate.repository.ServiceLogRepository;
+import com.thrddqno.motomate.util.CursorCodec;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -64,6 +66,36 @@ public class ServiceLogService {
                 .first(serviceLogPage.isFirst())
                 .last(serviceLogPage.isLast())
                 .build();
+    }
+
+    public CursorPageResponse<ServiceLogResponse> getServiceLogsKeyset(
+            UUID motorcycleId, UUID userId, String templateName, String cursor, int size) {
+        motorcycleRepository.findById(motorcycleId)
+                .filter(m -> m.getUser().getId().equals(userId))
+                .orElseThrow(() -> new ResourceNotFoundException("Motorcycle not found"));
+
+        int pageSize = normalizePageSize(size);
+        List<ServiceLog> logs = serviceLogRepository.findByMotorcycleIdKeyset(
+                motorcycleId,
+                userId,
+                blankToNull(templateName),
+                CursorCodec.decodeInstant(cursor),
+                PageRequest.of(0, pageSize + 1));
+
+        return toCursorPage(logs, pageSize);
+    }
+
+    public CursorPageResponse<ServiceLogResponse> getUserServiceLogsKeyset(
+            UUID userId, UUID motorcycleId, String templateName, String cursor, int size) {
+        int pageSize = normalizePageSize(size);
+        List<ServiceLog> logs = serviceLogRepository.findByUserIdKeyset(
+                userId,
+                motorcycleId,
+                blankToNull(templateName),
+                CursorCodec.decodeInstant(cursor),
+                PageRequest.of(0, pageSize + 1));
+
+        return toCursorPage(logs, pageSize);
     }
 
     public ServiceLogResponse getServiceLogById(UUID serviceLogId, UUID userId) {
@@ -139,5 +171,29 @@ public class ServiceLogService {
                 .notes(serviceLog.getNotes())
                 .createdAt(serviceLog.getCreatedAt())
                 .build();
+    }
+
+    private CursorPageResponse<ServiceLogResponse> toCursorPage(List<ServiceLog> logs, int pageSize) {
+        boolean hasMore = logs.size() > pageSize;
+        List<ServiceLog> pageItems = hasMore ? logs.subList(0, pageSize) : logs;
+        String nextCursor = hasMore ? CursorCodec.encode(pageItems.getLast().getCreatedAt()) : null;
+
+        return CursorPageResponse.<ServiceLogResponse>builder()
+                .content(pageItems.stream().map(this::toResponse).toList())
+                .nextCursor(nextCursor)
+                .hasMore(hasMore)
+                .pageSize(pageSize)
+                .build();
+    }
+
+    private int normalizePageSize(int size) {
+        if (size <= 0) {
+            return 20;
+        }
+        return Math.min(size, 50);
+    }
+
+    private String blankToNull(String value) {
+        return value == null || value.isBlank() ? null : value;
     }
 }

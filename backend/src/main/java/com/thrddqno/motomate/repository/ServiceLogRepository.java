@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
@@ -26,5 +27,31 @@ public interface ServiceLogRepository extends JpaRepository<ServiceLog, UUID> {
             @Param("motorcycleId") UUID motorcycleId,
             @Param("userId") UUID userId,
             @Param("templateName") String templateName,
+            Pageable pageable);
+
+    @Query("SELECT sl FROM ServiceLog sl " +
+           "WHERE sl.motorcycle.id = :motorcycleId " +
+           "AND sl.motorcycle.user.id = :userId " +
+           "AND (:templateName IS NULL OR LOWER(sl.template.name) LIKE LOWER(CONCAT('%', :templateName, '%'))) " +
+           "AND (:cursorCreatedAt IS NULL OR sl.createdAt < :cursorCreatedAt) " +
+           "ORDER BY sl.createdAt DESC")
+    List<ServiceLog> findByMotorcycleIdKeyset(
+            @Param("motorcycleId") UUID motorcycleId,
+            @Param("userId") UUID userId,
+            @Param("templateName") String templateName,
+            @Param("cursorCreatedAt") Instant cursorCreatedAt,
+            Pageable pageable);
+
+    @Query("SELECT sl FROM ServiceLog sl " +
+           "WHERE sl.motorcycle.user.id = :userId " +
+           "AND (:motorcycleId IS NULL OR sl.motorcycle.id = :motorcycleId) " +
+           "AND (:templateName IS NULL OR LOWER(sl.template.name) LIKE LOWER(CONCAT('%', :templateName, '%'))) " +
+           "AND (:cursorCreatedAt IS NULL OR sl.createdAt < :cursorCreatedAt) " +
+           "ORDER BY sl.createdAt DESC")
+    List<ServiceLog> findByUserIdKeyset(
+            @Param("userId") UUID userId,
+            @Param("motorcycleId") UUID motorcycleId,
+            @Param("templateName") String templateName,
+            @Param("cursorCreatedAt") Instant cursorCreatedAt,
             Pageable pageable);
 }

@@ -3,6 +3,7 @@ package com.thrddqno.motomate.controller;
 import com.thrddqno.motomate.dto.ApiResponse;
 import com.thrddqno.motomate.dto.request.CreateScheduleRequest;
 import com.thrddqno.motomate.dto.request.UpdateScheduleRequest;
+import com.thrddqno.motomate.dto.response.CursorPageResponse;
 import com.thrddqno.motomate.dto.response.ScheduleResponse;
 import com.thrddqno.motomate.security.CurrentUser;
 import com.thrddqno.motomate.service.ScheduleService;
@@ -22,9 +23,13 @@ public class ScheduleController {
     private final ScheduleService scheduleService;
 
     @GetMapping
-    public ApiResponse<List<ScheduleResponse>> getSchedules(@PathVariable UUID motorcycleId,
-                                                            @CurrentUser UUID userId) {
-        List<ScheduleResponse> schedules = scheduleService.getSchedulesByMotorcycleId(motorcycleId, userId);
+    public ApiResponse<CursorPageResponse<ScheduleResponse>> getSchedules(
+            @PathVariable UUID motorcycleId,
+            @CurrentUser UUID userId,
+            @RequestParam(required = false) String cursor,
+            @RequestParam(defaultValue = "20") int size) {
+        CursorPageResponse<ScheduleResponse> schedules = scheduleService.getSchedulesByMotorcycleId(
+                motorcycleId, userId, cursor, size);
         return ApiResponse.success("Schedules retrieved successfully", schedules);
     }
 

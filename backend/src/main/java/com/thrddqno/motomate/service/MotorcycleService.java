@@ -2,6 +2,7 @@ package com.thrddqno.motomate.service;
 
 import com.thrddqno.motomate.dto.request.CreateMotorcycleRequest;
 import com.thrddqno.motomate.dto.request.UpdateMotorcycleRequest;
+import com.thrddqno.motomate.dto.response.CursorPageResponse;
 import com.thrddqno.motomate.dto.response.MotorcycleDetailResponse;
 import com.thrddqno.motomate.dto.response.MotorcycleResponse;
 import com.thrddqno.motomate.dto.response.ScheduleResponse;
@@ -18,7 +19,9 @@ import com.thrddqno.motomate.repository.MaintenanceTemplateRepository;
 import com.thrddqno.motomate.repository.MotorcycleRepository;
 import com.thrddqno.motomate.repository.ServiceLogRepository;
 import com.thrddqno.motomate.repository.UserRepository;
+import com.thrddqno.motomate.util.CursorCodec;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -43,6 +46,25 @@ public class MotorcycleService {
         return motorcycleRepository.findByUserId(userId).stream()
                 .map(this::toResponse)
                 .toList();
+    }
+
+    public CursorPageResponse<MotorcycleResponse> getMotorcyclesByUserId(UUID userId, String cursor, int size) {
+        int pageSize = normalizePageSize(size);
+        List<Motorcycle> motorcycles = motorcycleRepository.findByUserIdKeyset(
+                userId,
+                CursorCodec.decodeInstant(cursor),
+                PageRequest.of(0, pageSize + 1));
+
+        boolean hasMore = motorcycles.size() > pageSize;
+        List<Motorcycle> pageItems = hasMore ? motorcycles.subList(0, pageSize) : motorcycles;
+        String nextCursor = hasMore ? CursorCodec.encode(pageItems.getLast().getCreatedAt()) : null;
+
+        return CursorPageResponse.<MotorcycleResponse>builder()
+                .content(pageItems.stream().map(this::toResponse).toList())
+                .nextCursor(nextCursor)
+                .hasMore(hasMore)
+                .pageSize(pageSize)
+                .build();
     }
 
     public MotorcycleResponse getMotorcycleById(UUID motorcycleId, UUID userId) {
@@ -256,6 +278,13 @@ public class MotorcycleService {
                 .createdAt(motorcycle.getCreatedAt())
                 .updatedAt(motorcycle.getUpdatedAt())
                 .build();
+    }
+
+    private int normalizePageSize(int size) {
+        if (size <= 0) {
+            return 20;
+        }
+        return Math.min(size, 50);
     }
 
     private ScheduleResponse toScheduleResponse(MaintenanceSchedule schedule) {

@@ -2,6 +2,7 @@ package com.thrddqno.motomate.service;
 
 import com.thrddqno.motomate.dto.request.CreateScheduleRequest;
 import com.thrddqno.motomate.dto.request.UpdateScheduleRequest;
+import com.thrddqno.motomate.dto.response.CursorPageResponse;
 import com.thrddqno.motomate.dto.response.ScheduleResponse;
 import com.thrddqno.motomate.entity.MaintenanceSchedule;
 import com.thrddqno.motomate.entity.MaintenanceTemplate;
@@ -11,7 +12,9 @@ import com.thrddqno.motomate.exception.ResourceNotFoundException;
 import com.thrddqno.motomate.repository.MaintenanceScheduleRepository;
 import com.thrddqno.motomate.repository.MaintenanceTemplateRepository;
 import com.thrddqno.motomate.repository.MotorcycleRepository;
+import com.thrddqno.motomate.util.CursorCodec;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,6 +39,29 @@ public class ScheduleService {
         return scheduleRepository.findByMotorcycleId(motorcycleId).stream()
                 .map(this::toResponse)
                 .toList();
+    }
+
+    public CursorPageResponse<ScheduleResponse> getSchedulesByMotorcycleId(UUID motorcycleId, UUID userId, String cursor, int size) {
+        motorcycleRepository.findById(motorcycleId)
+                .filter(m -> m.getUser().getId().equals(userId))
+                .orElseThrow(() -> new ResourceNotFoundException("Motorcycle not found"));
+
+        int pageSize = normalizePageSize(size);
+        List<MaintenanceSchedule> schedules = scheduleRepository.findByMotorcycleIdKeyset(
+                motorcycleId,
+                CursorCodec.decodeInstant(cursor),
+                PageRequest.of(0, pageSize + 1));
+
+        boolean hasMore = schedules.size() > pageSize;
+        List<MaintenanceSchedule> pageItems = hasMore ? schedules.subList(0, pageSize) : schedules;
+        String nextCursor = hasMore ? CursorCodec.encode(pageItems.getLast().getCreatedAt()) : null;
+
+        return CursorPageResponse.<ScheduleResponse>builder()
+                .content(pageItems.stream().map(this::toResponse).toList())
+                .nextCursor(nextCursor)
+                .hasMore(hasMore)
+                .pageSize(pageSize)
+                .build();
     }
 
     public ScheduleResponse getScheduleById(UUID scheduleId, UUID userId) {
@@ -154,5 +180,12 @@ public class ScheduleService {
                 .createdAt(schedule.getCreatedAt())
                 .updatedAt(schedule.getUpdatedAt())
                 .build();
+    }
+
+    private int normalizePageSize(int size) {
+        if (size <= 0) {
+            return 20;
+        }
+        return Math.min(size, 50);
     }
 }

@@ -1,6 +1,7 @@
 package com.thrddqno.motomate.service;
 
 import com.thrddqno.motomate.dto.request.CreateTemplateRequest;
+import com.thrddqno.motomate.dto.response.CursorPageResponse;
 import com.thrddqno.motomate.dto.response.TemplateResponse;
 import com.thrddqno.motomate.entity.MaintenanceTemplate;
 import com.thrddqno.motomate.entity.User;
@@ -8,7 +9,9 @@ import com.thrddqno.motomate.enums.MaintenanceCategory;
 import com.thrddqno.motomate.exception.ResourceNotFoundException;
 import com.thrddqno.motomate.repository.MaintenanceTemplateRepository;
 import com.thrddqno.motomate.repository.UserRepository;
+import com.thrddqno.motomate.util.CursorCodec;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -38,6 +41,26 @@ public class TemplateService {
         return templates.stream()
                 .map(this::toResponse)
                 .toList();
+    }
+
+    public CursorPageResponse<TemplateResponse> getTemplates(UUID userId, MaintenanceCategory category, String cursor, int size) {
+        int pageSize = normalizePageSize(size);
+        List<MaintenanceTemplate> templates = templateRepository.findVisibleTemplatesKeyset(
+                userId,
+                category,
+                CursorCodec.decodeInstant(cursor),
+                PageRequest.of(0, pageSize + 1));
+
+        boolean hasMore = templates.size() > pageSize;
+        List<MaintenanceTemplate> pageItems = hasMore ? templates.subList(0, pageSize) : templates;
+        String nextCursor = hasMore ? CursorCodec.encode(pageItems.getLast().getCreatedAt()) : null;
+
+        return CursorPageResponse.<TemplateResponse>builder()
+                .content(pageItems.stream().map(this::toResponse).toList())
+                .nextCursor(nextCursor)
+                .hasMore(hasMore)
+                .pageSize(pageSize)
+                .build();
     }
 
     public List<TemplateResponse> getCustomTemplates(UUID userId) {
@@ -80,5 +103,12 @@ public class TemplateService {
                 .isSpecial(template.getIsSpecial())
                 .isSystem(template.getIsSystem())
                 .build();
+    }
+
+    private int normalizePageSize(int size) {
+        if (size <= 0) {
+            return 20;
+        }
+        return Math.min(size, 50);
     }
 }
