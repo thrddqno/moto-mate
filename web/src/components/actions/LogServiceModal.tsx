@@ -6,13 +6,14 @@ interface LogServiceModalProps {
   bikeId: string | null
   open: boolean
   onClose: () => void
+  initialScheduleId?: string
 }
 
-export function LogServiceModal({ bikeId, open, onClose }: LogServiceModalProps) {
+export function LogServiceModal({ bikeId, open, onClose, initialScheduleId }: LogServiceModalProps) {
   const { fetchSchedules, scheduleMap } = useScheduleStore()
   const { createLog } = useServiceLogStore()
   const schedules = bikeId ? scheduleMap[bikeId] || [] : []
-  const [scheduleId, setScheduleId] = useState('')
+  const [scheduleId, setScheduleId] = useState(initialScheduleId || '')
   const [dateOfService, setDateOfService] = useState(new Date().toISOString().slice(0, 10))
   const [mileageAtService, setMileageAtService] = useState('')
   const [notes, setNotes] = useState('')

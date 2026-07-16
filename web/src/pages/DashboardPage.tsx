@@ -1,5 +1,6 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { LogServiceModal } from '../components/actions/LogServiceModal'
 import { QuickActionFab } from '../components/actions/QuickActionFab'
 import { EmptyState } from '../components/ui/EmptyState'
 import { StatusSection } from '../components/ui/StatusSection'
@@ -27,6 +28,7 @@ function sortUpcomingByMileageLeft(items: DashboardItem[]) {
 export default function DashboardPage() {
   const { profile, user } = useAuth()
   const { data: dashboard, error, fetchDashboard, lastFetched, loading } = useDashboardStore()
+  const [selectedServiceItem, setSelectedServiceItem] = useState<DashboardItem | null>(null)
   const displayName = profile?.displayName || user?.displayName
 
   useEffect(() => {
@@ -105,11 +107,18 @@ export default function DashboardPage() {
           <>
             <StatusSection title="Overdue" status="OVERDUE" items={overdue} />
             <StatusSection title="Due Soon" status="DUE_SOON" items={dueSoon} />
-            <StatusSection title="Upcoming" status="UPCOMING" items={upcoming} />
+            <StatusSection title="Upcoming" status="UPCOMING" items={upcoming} onItemClick={setSelectedServiceItem} />
           </>
         )}
       </section>
       <QuickActionFab />
+      <LogServiceModal
+        bikeId={selectedServiceItem?.motorcycleId ?? null}
+        initialScheduleId={selectedServiceItem?.scheduleId}
+        key={selectedServiceItem?.scheduleId ?? 'no-selection'}
+        open={selectedServiceItem != null}
+        onClose={() => setSelectedServiceItem(null)}
+      />
     </main>
   )
 }

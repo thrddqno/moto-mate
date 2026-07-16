@@ -5,6 +5,7 @@ interface StatusSectionProps {
   title: string
   status: DashboardStatus
   items: DashboardItem[]
+  onItemClick?: (item: DashboardItem) => void
 }
 
 const statusColor: Record<DashboardStatus, string> = {
@@ -13,7 +14,7 @@ const statusColor: Record<DashboardStatus, string> = {
   UPCOMING: 'var(--color-green)',
 }
 
-export function StatusSection({ title, status, items }: StatusSectionProps) {
+export function StatusSection({ title, status, items, onItemClick }: StatusSectionProps) {
   if (items.length === 0) return null
 
   return (
@@ -24,18 +25,30 @@ export function StatusSection({ title, status, items }: StatusSectionProps) {
         <span>{items.length}</span>
       </h2>
       <div style={{ display: 'grid', gap: 8 }}>
-        {items.map((item) => (
-          <article className="task-card card" key={item.scheduleId}>
-            <span className="status-dot" style={{ color: statusColor[status] }} aria-hidden="true" />
-            <div className="task-card__body">
-              <h3>{item.templateName}</h3>
-              <p>{item.motorcycleName}</p>
-              {item.milesRemaining != null ? <small>{formatMilesRemaining(item.milesRemaining)}</small> : null}
-              {item.daysRemaining != null ? <small>{formatDaysRemaining(item.daysRemaining)}</small> : null}
-            </div>
-            <span aria-hidden="true">›</span>
-          </article>
-        ))}
+        {items.map((item) => {
+          const content = (
+            <>
+              <span className="status-dot" style={{ color: statusColor[status] }} aria-hidden="true" />
+              <div className="task-card__body">
+                <h3>{item.templateName}</h3>
+                <p>{item.motorcycleName}</p>
+                {item.milesRemaining != null ? <small>{formatMilesRemaining(item.milesRemaining)}</small> : null}
+                {item.daysRemaining != null ? <small>{formatDaysRemaining(item.daysRemaining)}</small> : null}
+              </div>
+              <span aria-hidden="true">›</span>
+            </>
+          )
+
+          return onItemClick ? (
+            <button className="task-card card card-button" key={item.scheduleId} onClick={() => onItemClick(item)} type="button">
+              {content}
+            </button>
+          ) : (
+            <article className="task-card card" key={item.scheduleId}>
+              {content}
+            </article>
+          )
+        })}
       </div>
     </section>
   )
