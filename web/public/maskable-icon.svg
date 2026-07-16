@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Moto Mate">
+  <rect width="512" height="512" fill="#ffb300"/>
+  <circle cx="256" cy="256" r="178" fill="#0d0d0d"/>
+  <path d="M92 326c0-47 38-85 85-85 33 0 62 19 76 47h38c14-28 43-47 76-47 47 0 85 38 85 85s-38 85-85 85c-42 0-77-31-84-71h-56c-7 40-42 71-84 71-47 0-85-38-85-85Z" fill="#ffb300"/>
+  <circle cx="177" cy="326" r="41" fill="#0d0d0d"/>
+  <circle cx="367" cy="326" r="41" fill="#0d0d0d"/>
+  <path d="M176 190h107l46 76h-55l-28-40h-70v-36Z" fill="#40c4ff"/>
+</svg>
