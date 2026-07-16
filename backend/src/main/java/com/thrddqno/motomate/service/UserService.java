@@ -37,6 +37,12 @@ public class UserService {
         if (request.getEmail() != null) {
             user.setEmail(request.getEmail());
         }
+        if (request.getUnitPreference() != null) {
+            String pref = request.getUnitPreference();
+            if (pref.equals("km") || pref.equals("mi")) {
+                user.setUnitPreference(pref);
+            }
+        }
         user.setUpdatedAt(Instant.now());
         userRepository.save(user);
 

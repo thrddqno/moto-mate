@@ -6,4 +6,5 @@ import lombok.Data;
 public class SyncProfileRequest {
     private String displayName;
     private String email;
+    private String unitPreference;
 }
