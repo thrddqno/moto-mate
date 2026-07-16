@@ -15,6 +15,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -45,11 +46,19 @@ public class TemplateService {
 
     public CursorPageResponse<TemplateResponse> getTemplates(UUID userId, MaintenanceCategory category, String cursor, int size) {
         int pageSize = normalizePageSize(size);
-        List<MaintenanceTemplate> templates = templateRepository.findVisibleTemplatesKeyset(
-                userId,
-                category,
-                CursorCodec.decodeInstant(cursor),
-                PageRequest.of(0, pageSize + 1));
+        Instant cursorCreatedAt = CursorCodec.decodeInstant(cursor);
+        PageRequest pageRequest = PageRequest.of(0, pageSize + 1);
+        List<MaintenanceTemplate> templates;
+
+        if (category == null && cursorCreatedAt == null) {
+            templates = templateRepository.findVisibleTemplatesKeyset(userId, pageRequest);
+        } else if (category == null) {
+            templates = templateRepository.findVisibleTemplatesKeysetAfter(userId, cursorCreatedAt, pageRequest);
+        } else if (cursorCreatedAt == null) {
+            templates = templateRepository.findVisibleTemplatesByCategoryKeyset(userId, category, pageRequest);
+        } else {
+            templates = templateRepository.findVisibleTemplatesByCategoryKeysetAfter(userId, category, cursorCreatedAt, pageRequest);
+        }
 
         boolean hasMore = templates.size() > pageSize;
         List<MaintenanceTemplate> pageItems = hasMore ? templates.subList(0, pageSize) : templates;

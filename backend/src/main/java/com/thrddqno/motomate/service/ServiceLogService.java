@@ -23,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 
 @Service
@@ -50,8 +51,11 @@ public class ServiceLogService {
                 .orElseThrow(() -> new ResourceNotFoundException("Motorcycle not found"));
 
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "dateOfService"));
-        Page<ServiceLog> serviceLogPage = serviceLogRepository.findByMotorcycleIdAndUserIdWithFilter(
-                motorcycleId, userId, templateName, pageable);
+        String templatePattern = templatePattern(templateName);
+        Page<ServiceLog> serviceLogPage = templatePattern == null
+                ? serviceLogRepository.findByMotorcycleIdAndUserId(motorcycleId, userId, pageable)
+                : serviceLogRepository.findByMotorcycleIdAndUserIdWithTemplateName(
+                        motorcycleId, userId, templatePattern, pageable);
 
         List<ServiceLogResponse> content = serviceLogPage.getContent().stream()
                 .map(this::toResponse)
@@ -75,12 +79,7 @@ public class ServiceLogService {
                 .orElseThrow(() -> new ResourceNotFoundException("Motorcycle not found"));
 
         int pageSize = normalizePageSize(size);
-        List<ServiceLog> logs = serviceLogRepository.findByMotorcycleIdKeyset(
-                motorcycleId,
-                userId,
-                blankToNull(templateName),
-                CursorCodec.decodeInstant(cursor),
-                PageRequest.of(0, pageSize + 1));
+        List<ServiceLog> logs = findMotorcycleLogs(motorcycleId, userId, templateName, cursor, pageSize);
 
         return toCursorPage(logs, pageSize);
     }
@@ -88,12 +87,7 @@ public class ServiceLogService {
     public CursorPageResponse<ServiceLogResponse> getUserServiceLogsKeyset(
             UUID userId, UUID motorcycleId, String templateName, String cursor, int size) {
         int pageSize = normalizePageSize(size);
-        List<ServiceLog> logs = serviceLogRepository.findByUserIdKeyset(
-                userId,
-                motorcycleId,
-                blankToNull(templateName),
-                CursorCodec.decodeInstant(cursor),
-                PageRequest.of(0, pageSize + 1));
+        List<ServiceLog> logs = findUserLogs(userId, motorcycleId, templateName, cursor, pageSize);
 
         return toCursorPage(logs, pageSize);
     }
@@ -193,7 +187,72 @@ public class ServiceLogService {
         return Math.min(size, 50);
     }
 
-    private String blankToNull(String value) {
-        return value == null || value.isBlank() ? null : value;
+    private List<ServiceLog> findMotorcycleLogs(UUID motorcycleId, UUID userId, String templateName, String cursor, int pageSize) {
+        Instant cursorCreatedAt = CursorCodec.decodeInstant(cursor);
+        String templatePattern = templatePattern(templateName);
+        PageRequest pageRequest = PageRequest.of(0, pageSize + 1);
+
+        if (templatePattern == null && cursorCreatedAt == null) {
+            return serviceLogRepository.findByMotorcycleIdKeyset(motorcycleId, userId, pageRequest);
+        }
+
+        if (templatePattern == null) {
+            return serviceLogRepository.findByMotorcycleIdKeysetAfter(motorcycleId, userId, cursorCreatedAt, pageRequest);
+        }
+
+        if (cursorCreatedAt == null) {
+            return serviceLogRepository.findByMotorcycleIdKeysetWithTemplateName(
+                    motorcycleId, userId, templatePattern, pageRequest);
+        }
+
+        return serviceLogRepository.findByMotorcycleIdKeysetWithTemplateNameAfter(
+                motorcycleId, userId, templatePattern, cursorCreatedAt, pageRequest);
+    }
+
+    private List<ServiceLog> findUserLogs(UUID userId, UUID motorcycleId, String templateName, String cursor, int pageSize) {
+        Instant cursorCreatedAt = CursorCodec.decodeInstant(cursor);
+        String templatePattern = templatePattern(templateName);
+        PageRequest pageRequest = PageRequest.of(0, pageSize + 1);
+
+        if (motorcycleId == null && templatePattern == null && cursorCreatedAt == null) {
+            return serviceLogRepository.findByUserIdKeyset(userId, pageRequest);
+        }
+
+        if (motorcycleId != null && templatePattern == null && cursorCreatedAt == null) {
+            return serviceLogRepository.findByUserIdAndMotorcycleIdKeyset(userId, motorcycleId, pageRequest);
+        }
+
+        if (motorcycleId == null && templatePattern != null && cursorCreatedAt == null) {
+            return serviceLogRepository.findByUserIdKeysetWithTemplateName(userId, templatePattern, pageRequest);
+        }
+
+        if (motorcycleId != null && templatePattern != null && cursorCreatedAt == null) {
+            return serviceLogRepository.findByUserIdAndMotorcycleIdKeysetWithTemplateName(
+                    userId, motorcycleId, templatePattern, pageRequest);
+        }
+
+        if (motorcycleId == null && templatePattern == null) {
+            return serviceLogRepository.findByUserIdKeysetAfter(userId, cursorCreatedAt, pageRequest);
+        }
+
+        if (motorcycleId != null && templatePattern == null) {
+            return serviceLogRepository.findByUserIdAndMotorcycleIdKeysetAfter(
+                    userId, motorcycleId, cursorCreatedAt, pageRequest);
+        }
+
+        if (motorcycleId == null) {
+            return serviceLogRepository.findByUserIdKeysetWithTemplateNameAfter(
+                    userId, templatePattern, cursorCreatedAt, pageRequest);
+        }
+
+        return serviceLogRepository.findByUserIdAndMotorcycleIdKeysetWithTemplateNameAfter(
+                userId, motorcycleId, templatePattern, cursorCreatedAt, pageRequest);
+    }
+
+    private String templatePattern(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        return "%" + value.toLowerCase(Locale.ROOT) + "%";
     }
 }

@@ -19,9 +19,16 @@ public interface MaintenanceScheduleRepository extends JpaRepository<Maintenance
 
     @Query("SELECT s FROM MaintenanceSchedule s " +
            "WHERE s.motorcycle.id = :motorcycleId " +
-           "AND (:cursorCreatedAt IS NULL OR s.createdAt < :cursorCreatedAt) " +
            "ORDER BY s.createdAt DESC")
     List<MaintenanceSchedule> findByMotorcycleIdKeyset(
+            @Param("motorcycleId") UUID motorcycleId,
+            Pageable pageable);
+
+    @Query("SELECT s FROM MaintenanceSchedule s " +
+           "WHERE s.motorcycle.id = :motorcycleId " +
+           "AND s.createdAt < :cursorCreatedAt " +
+           "ORDER BY s.createdAt DESC")
+    List<MaintenanceSchedule> findByMotorcycleIdKeysetAfter(
             @Param("motorcycleId") UUID motorcycleId,
             @Param("cursorCreatedAt") Instant cursorCreatedAt,
             Pageable pageable);

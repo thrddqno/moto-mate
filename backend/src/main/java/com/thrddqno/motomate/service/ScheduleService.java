@@ -47,10 +47,11 @@ public class ScheduleService {
                 .orElseThrow(() -> new ResourceNotFoundException("Motorcycle not found"));
 
         int pageSize = normalizePageSize(size);
-        List<MaintenanceSchedule> schedules = scheduleRepository.findByMotorcycleIdKeyset(
-                motorcycleId,
-                CursorCodec.decodeInstant(cursor),
-                PageRequest.of(0, pageSize + 1));
+        Instant cursorCreatedAt = CursorCodec.decodeInstant(cursor);
+        PageRequest pageRequest = PageRequest.of(0, pageSize + 1);
+        List<MaintenanceSchedule> schedules = cursorCreatedAt == null
+                ? scheduleRepository.findByMotorcycleIdKeyset(motorcycleId, pageRequest)
+                : scheduleRepository.findByMotorcycleIdKeysetAfter(motorcycleId, cursorCreatedAt, pageRequest);
 
         boolean hasMore = schedules.size() > pageSize;
         List<MaintenanceSchedule> pageItems = hasMore ? schedules.subList(0, pageSize) : schedules;

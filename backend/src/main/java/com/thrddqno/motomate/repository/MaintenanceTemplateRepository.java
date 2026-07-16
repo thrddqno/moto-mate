@@ -22,10 +22,35 @@ public interface MaintenanceTemplateRepository extends JpaRepository<Maintenance
 
     @Query("SELECT t FROM MaintenanceTemplate t " +
            "WHERE (t.isPublic = true OR t.createdByUserId = :userId) " +
-           "AND (:category IS NULL OR t.category = :category) " +
-           "AND (:cursorCreatedAt IS NULL OR t.createdAt < :cursorCreatedAt) " +
            "ORDER BY t.createdAt DESC")
     List<MaintenanceTemplate> findVisibleTemplatesKeyset(
+            @Param("userId") UUID userId,
+            Pageable pageable);
+
+    @Query("SELECT t FROM MaintenanceTemplate t " +
+           "WHERE (t.isPublic = true OR t.createdByUserId = :userId) " +
+           "AND t.createdAt < :cursorCreatedAt " +
+           "ORDER BY t.createdAt DESC")
+    List<MaintenanceTemplate> findVisibleTemplatesKeysetAfter(
+            @Param("userId") UUID userId,
+            @Param("cursorCreatedAt") Instant cursorCreatedAt,
+            Pageable pageable);
+
+    @Query("SELECT t FROM MaintenanceTemplate t " +
+           "WHERE (t.isPublic = true OR t.createdByUserId = :userId) " +
+           "AND t.category = :category " +
+           "ORDER BY t.createdAt DESC")
+    List<MaintenanceTemplate> findVisibleTemplatesByCategoryKeyset(
+            @Param("userId") UUID userId,
+            @Param("category") MaintenanceCategory category,
+            Pageable pageable);
+
+    @Query("SELECT t FROM MaintenanceTemplate t " +
+           "WHERE (t.isPublic = true OR t.createdByUserId = :userId) " +
+           "AND t.category = :category " +
+           "AND t.createdAt < :cursorCreatedAt " +
+           "ORDER BY t.createdAt DESC")
+    List<MaintenanceTemplate> findVisibleTemplatesByCategoryKeysetAfter(
             @Param("userId") UUID userId,
             @Param("category") MaintenanceCategory category,
             @Param("cursorCreatedAt") Instant cursorCreatedAt,

@@ -21,9 +21,19 @@ public interface ServiceLogRepository extends JpaRepository<ServiceLog, UUID> {
            "JOIN sl.schedule s " +
            "JOIN s.motorcycle m " +
            "WHERE sl.motorcycle.id = :motorcycleId " +
+           "AND m.user.id = :userId")
+    Page<ServiceLog> findByMotorcycleIdAndUserId(
+            @Param("motorcycleId") UUID motorcycleId,
+            @Param("userId") UUID userId,
+            Pageable pageable);
+
+    @Query("SELECT sl FROM ServiceLog sl " +
+           "JOIN sl.schedule s " +
+           "JOIN s.motorcycle m " +
+           "WHERE sl.motorcycle.id = :motorcycleId " +
            "AND m.user.id = :userId " +
-           "AND (:templateName IS NULL OR s.template.name LIKE %:templateName%)")
-    Page<ServiceLog> findByMotorcycleIdAndUserIdWithFilter(
+           "AND LOWER(s.template.name) LIKE :templateName")
+    Page<ServiceLog> findByMotorcycleIdAndUserIdWithTemplateName(
             @Param("motorcycleId") UUID motorcycleId,
             @Param("userId") UUID userId,
             @Param("templateName") String templateName,
@@ -32,10 +42,41 @@ public interface ServiceLogRepository extends JpaRepository<ServiceLog, UUID> {
     @Query("SELECT sl FROM ServiceLog sl " +
            "WHERE sl.motorcycle.id = :motorcycleId " +
            "AND sl.motorcycle.user.id = :userId " +
-           "AND (:templateName IS NULL OR LOWER(sl.template.name) LIKE LOWER(CONCAT('%', :templateName, '%'))) " +
-           "AND (:cursorCreatedAt IS NULL OR sl.createdAt < :cursorCreatedAt) " +
            "ORDER BY sl.createdAt DESC")
     List<ServiceLog> findByMotorcycleIdKeyset(
+            @Param("motorcycleId") UUID motorcycleId,
+            @Param("userId") UUID userId,
+            Pageable pageable);
+
+    @Query("SELECT sl FROM ServiceLog sl " +
+           "WHERE sl.motorcycle.id = :motorcycleId " +
+           "AND sl.motorcycle.user.id = :userId " +
+           "AND LOWER(sl.template.name) LIKE :templateName " +
+           "ORDER BY sl.createdAt DESC")
+    List<ServiceLog> findByMotorcycleIdKeysetWithTemplateName(
+            @Param("motorcycleId") UUID motorcycleId,
+            @Param("userId") UUID userId,
+            @Param("templateName") String templateName,
+            Pageable pageable);
+
+    @Query("SELECT sl FROM ServiceLog sl " +
+           "WHERE sl.motorcycle.id = :motorcycleId " +
+           "AND sl.motorcycle.user.id = :userId " +
+           "AND sl.createdAt < :cursorCreatedAt " +
+           "ORDER BY sl.createdAt DESC")
+    List<ServiceLog> findByMotorcycleIdKeysetAfter(
+            @Param("motorcycleId") UUID motorcycleId,
+            @Param("userId") UUID userId,
+            @Param("cursorCreatedAt") Instant cursorCreatedAt,
+            Pageable pageable);
+
+    @Query("SELECT sl FROM ServiceLog sl " +
+           "WHERE sl.motorcycle.id = :motorcycleId " +
+           "AND sl.motorcycle.user.id = :userId " +
+           "AND LOWER(sl.template.name) LIKE :templateName " +
+           "AND sl.createdAt < :cursorCreatedAt " +
+           "ORDER BY sl.createdAt DESC")
+    List<ServiceLog> findByMotorcycleIdKeysetWithTemplateNameAfter(
             @Param("motorcycleId") UUID motorcycleId,
             @Param("userId") UUID userId,
             @Param("templateName") String templateName,
@@ -44,11 +85,78 @@ public interface ServiceLogRepository extends JpaRepository<ServiceLog, UUID> {
 
     @Query("SELECT sl FROM ServiceLog sl " +
            "WHERE sl.motorcycle.user.id = :userId " +
-           "AND (:motorcycleId IS NULL OR sl.motorcycle.id = :motorcycleId) " +
-           "AND (:templateName IS NULL OR LOWER(sl.template.name) LIKE LOWER(CONCAT('%', :templateName, '%'))) " +
-           "AND (:cursorCreatedAt IS NULL OR sl.createdAt < :cursorCreatedAt) " +
            "ORDER BY sl.createdAt DESC")
     List<ServiceLog> findByUserIdKeyset(
+            @Param("userId") UUID userId,
+            Pageable pageable);
+
+    @Query("SELECT sl FROM ServiceLog sl " +
+           "WHERE sl.motorcycle.user.id = :userId " +
+           "AND sl.motorcycle.id = :motorcycleId " +
+           "ORDER BY sl.createdAt DESC")
+    List<ServiceLog> findByUserIdAndMotorcycleIdKeyset(
+            @Param("userId") UUID userId,
+            @Param("motorcycleId") UUID motorcycleId,
+            Pageable pageable);
+
+    @Query("SELECT sl FROM ServiceLog sl " +
+           "WHERE sl.motorcycle.user.id = :userId " +
+           "AND LOWER(sl.template.name) LIKE :templateName " +
+           "ORDER BY sl.createdAt DESC")
+    List<ServiceLog> findByUserIdKeysetWithTemplateName(
+            @Param("userId") UUID userId,
+            @Param("templateName") String templateName,
+            Pageable pageable);
+
+    @Query("SELECT sl FROM ServiceLog sl " +
+           "WHERE sl.motorcycle.user.id = :userId " +
+           "AND sl.motorcycle.id = :motorcycleId " +
+           "AND LOWER(sl.template.name) LIKE :templateName " +
+           "ORDER BY sl.createdAt DESC")
+    List<ServiceLog> findByUserIdAndMotorcycleIdKeysetWithTemplateName(
+            @Param("userId") UUID userId,
+            @Param("motorcycleId") UUID motorcycleId,
+            @Param("templateName") String templateName,
+            Pageable pageable);
+
+    @Query("SELECT sl FROM ServiceLog sl " +
+           "WHERE sl.motorcycle.user.id = :userId " +
+           "AND sl.createdAt < :cursorCreatedAt " +
+           "ORDER BY sl.createdAt DESC")
+    List<ServiceLog> findByUserIdKeysetAfter(
+            @Param("userId") UUID userId,
+            @Param("cursorCreatedAt") Instant cursorCreatedAt,
+            Pageable pageable);
+
+    @Query("SELECT sl FROM ServiceLog sl " +
+           "WHERE sl.motorcycle.user.id = :userId " +
+           "AND sl.motorcycle.id = :motorcycleId " +
+           "AND sl.createdAt < :cursorCreatedAt " +
+           "ORDER BY sl.createdAt DESC")
+    List<ServiceLog> findByUserIdAndMotorcycleIdKeysetAfter(
+            @Param("userId") UUID userId,
+            @Param("motorcycleId") UUID motorcycleId,
+            @Param("cursorCreatedAt") Instant cursorCreatedAt,
+            Pageable pageable);
+
+    @Query("SELECT sl FROM ServiceLog sl " +
+           "WHERE sl.motorcycle.user.id = :userId " +
+           "AND LOWER(sl.template.name) LIKE :templateName " +
+           "AND sl.createdAt < :cursorCreatedAt " +
+           "ORDER BY sl.createdAt DESC")
+    List<ServiceLog> findByUserIdKeysetWithTemplateNameAfter(
+            @Param("userId") UUID userId,
+            @Param("templateName") String templateName,
+            @Param("cursorCreatedAt") Instant cursorCreatedAt,
+            Pageable pageable);
+
+    @Query("SELECT sl FROM ServiceLog sl " +
+           "WHERE sl.motorcycle.user.id = :userId " +
+           "AND sl.motorcycle.id = :motorcycleId " +
+           "AND LOWER(sl.template.name) LIKE :templateName " +
+           "AND sl.createdAt < :cursorCreatedAt " +
+           "ORDER BY sl.createdAt DESC")
+    List<ServiceLog> findByUserIdAndMotorcycleIdKeysetWithTemplateNameAfter(
             @Param("userId") UUID userId,
             @Param("motorcycleId") UUID motorcycleId,
             @Param("templateName") String templateName,

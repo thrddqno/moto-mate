@@ -18,9 +18,16 @@ public interface MotorcycleRepository extends JpaRepository<Motorcycle, UUID> {
 
     @Query("SELECT m FROM Motorcycle m " +
            "WHERE m.user.id = :userId " +
-           "AND (:cursorCreatedAt IS NULL OR m.createdAt < :cursorCreatedAt) " +
            "ORDER BY m.createdAt DESC")
     List<Motorcycle> findByUserIdKeyset(
+            @Param("userId") UUID userId,
+            Pageable pageable);
+
+    @Query("SELECT m FROM Motorcycle m " +
+           "WHERE m.user.id = :userId " +
+           "AND m.createdAt < :cursorCreatedAt " +
+           "ORDER BY m.createdAt DESC")
+    List<Motorcycle> findByUserIdKeysetAfter(
             @Param("userId") UUID userId,
             @Param("cursorCreatedAt") Instant cursorCreatedAt,
             Pageable pageable);

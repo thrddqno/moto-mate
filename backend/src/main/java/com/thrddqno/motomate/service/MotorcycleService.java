@@ -50,10 +50,11 @@ public class MotorcycleService {
 
     public CursorPageResponse<MotorcycleResponse> getMotorcyclesByUserId(UUID userId, String cursor, int size) {
         int pageSize = normalizePageSize(size);
-        List<Motorcycle> motorcycles = motorcycleRepository.findByUserIdKeyset(
-                userId,
-                CursorCodec.decodeInstant(cursor),
-                PageRequest.of(0, pageSize + 1));
+        Instant cursorCreatedAt = CursorCodec.decodeInstant(cursor);
+        PageRequest pageRequest = PageRequest.of(0, pageSize + 1);
+        List<Motorcycle> motorcycles = cursorCreatedAt == null
+                ? motorcycleRepository.findByUserIdKeyset(userId, pageRequest)
+                : motorcycleRepository.findByUserIdKeysetAfter(userId, cursorCreatedAt, pageRequest);
 
         boolean hasMore = motorcycles.size() > pageSize;
         List<Motorcycle> pageItems = hasMore ? motorcycles.subList(0, pageSize) : motorcycles;
