@@ -23,8 +23,8 @@ export function formatDaysRemaining(days: number): string {
   return `${days}d left`
 }
 
-export function formatMilesRemaining(miles: number): string {
-  if (miles < 0) return `${Math.abs(miles).toLocaleString()} over`
+export function formatMilesRemaining(miles: number, unit: 'km' | 'mi' = 'km'): string {
+  if (miles < 0) return `${Math.abs(miles).toLocaleString()} ${unit} over`
   if (miles === 0) return 'Due now'
-  return `${miles.toLocaleString()} left`
+  return `${miles.toLocaleString()} ${unit} left`
 }

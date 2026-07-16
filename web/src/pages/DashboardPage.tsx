@@ -5,6 +5,24 @@ import { EmptyState } from '../components/ui/EmptyState'
 import { StatusSection } from '../components/ui/StatusSection'
 import { useAuth } from '../context/AuthContext'
 import { useDashboardStore } from '../stores/dashboardStore'
+import type { DashboardItem } from '../types'
+
+function sortUpcomingByMileageLeft(items: DashboardItem[]) {
+  return [...items].sort((a, b) => {
+    if (a.milesRemaining != null && b.milesRemaining != null) {
+      return a.milesRemaining - b.milesRemaining
+    }
+
+    if (a.milesRemaining != null) return -1
+    if (b.milesRemaining != null) return 1
+
+    if (a.daysRemaining != null && b.daysRemaining != null) {
+      return a.daysRemaining - b.daysRemaining
+    }
+
+    return 0
+  })
+}
 
 export default function DashboardPage() {
   const { profile, user } = useAuth()
@@ -21,7 +39,7 @@ export default function DashboardPage() {
   const totalActiveSchedules = dashboard?.totalActiveSchedules ?? 0
   const overdue = dashboard?.overdue ?? []
   const dueSoon = dashboard?.dueSoon ?? []
-  const upcoming = dashboard?.upcoming ?? []
+  const upcoming = sortUpcomingByMileageLeft(dashboard?.upcoming ?? [])
 
   return (
     <main className="page dashboard-page">
