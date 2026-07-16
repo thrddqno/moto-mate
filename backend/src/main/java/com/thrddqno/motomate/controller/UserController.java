@@ -1,6 +1,7 @@
 package com.thrddqno.motomate.controller;
 
 import com.thrddqno.motomate.dto.ApiResponse;
+import com.thrddqno.motomate.dto.request.SyncProfileRequest;
 import com.thrddqno.motomate.dto.request.UpdateNotificationSettingsRequest;
 import com.thrddqno.motomate.dto.response.UserProfileResponse;
 import com.thrddqno.motomate.security.CurrentUser;
@@ -22,6 +23,14 @@ public class UserController {
     public ApiResponse<UserProfileResponse> getCurrentUser(@CurrentUser UUID userId) {
         UserProfileResponse profile = userService.getUserProfile(userId);
         return ApiResponse.success("User profile retrieved successfully", profile);
+    }
+
+    @PostMapping("/me")
+    public ApiResponse<UserProfileResponse> syncProfile(
+            @RequestBody SyncProfileRequest request,
+            @CurrentUser UUID userId) {
+        UserProfileResponse profile = userService.syncProfile(userId, request);
+        return ApiResponse.success("Profile synced successfully", profile);
     }
 
     @PutMapping("/me/notification-settings")

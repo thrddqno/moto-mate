@@ -1,5 +1,6 @@
 package com.thrddqno.motomate.service;
 
+import com.thrddqno.motomate.dto.request.SyncProfileRequest;
 import com.thrddqno.motomate.dto.request.UpdateNotificationSettingsRequest;
 import com.thrddqno.motomate.dto.response.UserProfileResponse;
 import com.thrddqno.motomate.entity.User;
@@ -22,6 +23,23 @@ public class UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
         
+        return toResponse(user);
+    }
+
+    @Transactional
+    public UserProfileResponse syncProfile(UUID userId, SyncProfileRequest request) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        if (request.getDisplayName() != null) {
+            user.setDisplayName(request.getDisplayName());
+        }
+        if (request.getEmail() != null) {
+            user.setEmail(request.getEmail());
+        }
+        user.setUpdatedAt(Instant.now());
+        userRepository.save(user);
+
         return toResponse(user);
     }
 
