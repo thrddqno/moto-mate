@@ -8,6 +8,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+import java.util.UUID;
+
 @Data
 @Builder
 @NoArgsConstructor
@@ -32,4 +35,6 @@ public class CreateMotorcycleRequest {
     @NotNull(message = "Current mileage is required")
     @Min(value = 0, message = "Current mileage must be non-negative")
     private Integer currentMileage;
+
+    private List<UUID> templateIds;
 }

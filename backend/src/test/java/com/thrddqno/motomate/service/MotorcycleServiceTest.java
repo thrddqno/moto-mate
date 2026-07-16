@@ -6,7 +6,10 @@ import com.thrddqno.motomate.dto.response.MotorcycleResponse;
 import com.thrddqno.motomate.entity.Motorcycle;
 import com.thrddqno.motomate.entity.User;
 import com.thrddqno.motomate.exception.ResourceNotFoundException;
+import com.thrddqno.motomate.repository.MaintenanceScheduleRepository;
+import com.thrddqno.motomate.repository.MaintenanceTemplateRepository;
 import com.thrddqno.motomate.repository.MotorcycleRepository;
+import com.thrddqno.motomate.repository.ServiceLogRepository;
 import com.thrddqno.motomate.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -33,10 +36,13 @@ class MotorcycleServiceTest {
     private UserRepository userRepository;
 
     @Mock
-    private com.thrddqno.motomate.repository.MaintenanceScheduleRepository scheduleRepository;
+    private MaintenanceScheduleRepository scheduleRepository;
 
     @Mock
-    private com.thrddqno.motomate.repository.ServiceLogRepository serviceLogRepository;
+    private ServiceLogRepository serviceLogRepository;
+
+    @Mock
+    private MaintenanceTemplateRepository templateRepository;
 
     @InjectMocks
     private MotorcycleService motorcycleService;
@@ -112,6 +118,8 @@ class MotorcycleServiceTest {
                 .thenReturn(Optional.of(user));
         when(motorcycleRepository.save(any(Motorcycle.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
+        when(templateRepository.findByIsSystem(true))
+                .thenReturn(List.of());
 
         MotorcycleResponse response = motorcycleService.createMotorcycle(request, user.getId());
 

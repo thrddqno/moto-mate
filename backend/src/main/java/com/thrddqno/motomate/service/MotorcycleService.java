@@ -7,12 +7,14 @@ import com.thrddqno.motomate.dto.response.MotorcycleResponse;
 import com.thrddqno.motomate.dto.response.ScheduleResponse;
 import com.thrddqno.motomate.dto.response.ServiceLogResponse;
 import com.thrddqno.motomate.entity.MaintenanceSchedule;
+import com.thrddqno.motomate.entity.MaintenanceTemplate;
 import com.thrddqno.motomate.entity.Motorcycle;
 import com.thrddqno.motomate.entity.ServiceLog;
 import com.thrddqno.motomate.entity.User;
 import com.thrddqno.motomate.enums.IntervalType;
 import com.thrddqno.motomate.exception.ResourceNotFoundException;
 import com.thrddqno.motomate.repository.MaintenanceScheduleRepository;
+import com.thrddqno.motomate.repository.MaintenanceTemplateRepository;
 import com.thrddqno.motomate.repository.MotorcycleRepository;
 import com.thrddqno.motomate.repository.ServiceLogRepository;
 import com.thrddqno.motomate.repository.UserRepository;
@@ -23,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -34,6 +37,7 @@ public class MotorcycleService {
     private final UserRepository userRepository;
     private final MaintenanceScheduleRepository scheduleRepository;
     private final ServiceLogRepository serviceLogRepository;
+    private final MaintenanceTemplateRepository templateRepository;
 
     public List<MotorcycleResponse> getMotorcyclesByUserId(UUID userId) {
         return motorcycleRepository.findByUserId(userId).stream()
@@ -143,6 +147,43 @@ public class MotorcycleService {
                 .build();
 
         Motorcycle saved = motorcycleRepository.save(motorcycle);
+
+        List<MaintenanceTemplate> templates;
+        if (request.getTemplateIds() != null && !request.getTemplateIds().isEmpty()) {
+            templates = templateRepository.findAllById(request.getTemplateIds());
+        } else {
+            templates = templateRepository.findByIsSystem(true);
+        }
+
+        Integer currentMileage = motorcycle.getCurrentMileage();
+        LocalDate today = LocalDate.now();
+
+        for (MaintenanceTemplate template : templates) {
+            MaintenanceSchedule schedule = MaintenanceSchedule.builder()
+                    .motorcycle(motorcycle)
+                    .template(template)
+                    .intervalType(template.getDefaultIntervalMileage() != null && template.getDefaultIntervalDays() != null
+                            ? IntervalType.BOTH
+                            : template.getDefaultIntervalMileage() != null
+                                    ? IntervalType.MILEAGE
+                                    : IntervalType.DATE)
+                    .intervalMileage(template.getDefaultIntervalMileage())
+                    .intervalDays(template.getDefaultIntervalDays())
+                    .lastServiceMileage(currentMileage)
+                    .lastServiceDate(today)
+                    .isActive(true)
+                    .build();
+
+            if (template.getDefaultIntervalMileage() != null) {
+                schedule.setNextDueMileage(currentMileage + template.getDefaultIntervalMileage());
+            }
+            if (template.getDefaultIntervalDays() != null) {
+                schedule.setNextDueDate(today.plusDays(template.getDefaultIntervalDays()));
+            }
+
+            scheduleRepository.save(schedule);
+        }
+
         return toResponse(saved);
     }
 
