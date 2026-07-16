@@ -1,7 +1,9 @@
-import { useEffect } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { useParams } from 'react-router-dom'
+import { ScheduleEditorModal } from '../components/schedules/ScheduleEditorModal'
 import { EmptyState } from '../components/ui/EmptyState'
 import { useScheduleStore } from '../stores/scheduleStore'
+import type { Schedule } from '../types'
 import { formatDate, formatMileage } from '../utils/format'
 
 function formatScheduleDue(nextDueMileage: number | null, nextDueDate: string | null) {
@@ -13,19 +15,14 @@ function formatScheduleDue(nextDueMileage: number | null, nextDueDate: string | 
 
 export default function SchedulesPage() {
   const { bikeId } = useParams()
-  const { deleteSchedule, error, fetchSchedules, hasMoreMap, loadMoreSchedules, loading, scheduleMap } = useScheduleStore()
+  const { error, fetchSchedules, hasMoreMap, loadMoreSchedules, loading, scheduleMap } = useScheduleStore()
   const schedules = bikeId ? scheduleMap[bikeId] || [] : []
   const hasMore = bikeId ? Boolean(hasMoreMap[bikeId]) : false
+  const [editingSchedule, setEditingSchedule] = useState<Schedule | null | undefined>(undefined)
 
   useEffect(() => {
     if (bikeId) void fetchSchedules(bikeId)
   }, [bikeId, fetchSchedules])
-
-  async function handleDelete(scheduleId: string, name: string) {
-    if (!bikeId) return
-    if (!window.confirm(`Delete ${name} schedule? Service logs remain in history.`)) return
-    await deleteSchedule(bikeId, scheduleId)
-  }
 
   return (
     <main className="page">
@@ -34,9 +31,9 @@ export default function SchedulesPage() {
           <p className="eyebrow">Maintenance</p>
           <h1 className="page-title">SCHEDULES</h1>
         </div>
-        <Link className="icon-button" to={bikeId ? `/bikes/${bikeId}/schedules/new` : '/bikes'} aria-label="Add schedule">
+        <button className="icon-button add-plus" onClick={() => setEditingSchedule(null)} type="button" aria-label="Add schedule">
           +
-        </Link>
+        </button>
       </header>
 
       {loading && schedules.length === 0 ? (
@@ -47,25 +44,22 @@ export default function SchedulesPage() {
         <>
           <EmptyState icon="🔧" title="No schedules yet" description="Assign maintenance tasks like oil changes or chain checks." />
           <div className="button-row">
-            <Link className="button" to={bikeId ? `/bikes/${bikeId}/schedules/new` : '/bikes'}>
+            <button className="button" onClick={() => setEditingSchedule(null)} type="button">
               Add Schedule
-            </Link>
+            </button>
           </div>
         </>
       ) : (
         <div className="bike-list">
           {schedules.map((schedule) => (
-            <article className="bike-card card" key={schedule.id}>
+            <button className="bike-card card card-button" key={schedule.id} onClick={() => setEditingSchedule(schedule)} type="button">
               <div className="bike-card__body">
                 <h3>{schedule.templateName}</h3>
                 <p>{schedule.intervalType} interval</p>
                 <small>{formatScheduleDue(schedule.nextDueMileage, schedule.nextDueDate)}</small>
               </div>
-              <div className="card-actions">
-                <Link to={`/bikes/${bikeId}/schedules/${schedule.id}/edit`}>Edit</Link>
-                <button onClick={() => void handleDelete(schedule.id, schedule.templateName)} type="button">Delete</button>
-              </div>
-            </article>
+              <span aria-hidden="true">›</span>
+            </button>
           ))}
           {hasMore && bikeId ? (
             <button className="button button--ghost" disabled={loading} onClick={() => void loadMoreSchedules(bikeId)} type="button">
@@ -74,6 +68,9 @@ export default function SchedulesPage() {
           ) : null}
         </div>
       )}
+      {bikeId && editingSchedule !== undefined ? (
+        <ScheduleEditorModal bikeId={bikeId} schedule={editingSchedule} onClose={() => setEditingSchedule(undefined)} />
+      ) : null}
     </main>
   )
 }

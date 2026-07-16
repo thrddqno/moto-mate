@@ -266,6 +266,12 @@ a {
   text-decoration: none;
 }
 
+.card-button {
+  border: 1px solid var(--color-border);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.02));
+  cursor: pointer;
+}
+
 .bike-list {
   display: grid;
   gap: 10px;
