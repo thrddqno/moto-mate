@@ -1,0 +1,38 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: motomate_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: motomate_dev
+      POSTGRES_USER: motomate_admin
+      POSTGRES_PASSWORD: motomate_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - motomate_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U motomate_admin -d motomate_dev"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build: ./backend
+    container_name: motomate_backend
+    restart: unless-stopped
+    ports:
+      - "8081:8081"
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/motomate_dev
+      DB_USERNAME: motomate_admin
+      DB_PASSWORD: motomate_password
+      FIREBASE_SERVICE_ACCOUNT_PATH: /etc/firebase/firebase-service-account.json
+    volumes:
+      - ./backend/src/main/resources/firebase-service-account.json:/etc/firebase/firebase-service-account.json:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  motomate_pgdata:

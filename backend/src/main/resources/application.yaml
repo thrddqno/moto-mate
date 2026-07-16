@@ -2,13 +2,13 @@ spring:
   application:
     name: motomate
   datasource:
-    url: jdbc:postgresql://localhost:5432/motomate_dev
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/motomate_dev}
     username: ${DB_USERNAME:motomate_admin}
     password: ${DB_PASSWORD:motomate_password}
   jpa:
     hibernate:
       ddl-auto: validate
-    show-sql: true
+    show-sql: ${SHOW_SQL:true}
     properties:
       hibernate:
         default_schema: moto_mate
@@ -19,7 +19,7 @@ spring:
     schemas: moto_mate
 
 firebase:
-  service-account: ${FIREBASE_SERVICE_ACCOUNT_PATH}
+  service-account: ${FIREBASE_SERVICE_ACCOUNT_PATH:}
 
 server:
-  port: 8081
+  port: ${PORT:8081}
