@@ -45,6 +45,7 @@ export interface UserProfile {
 export interface SyncProfileRequest {
   displayName?: string;
   email?: string;
+  unitPreference?: UnitPreference;
 }
 
 export interface UpdateNotificationSettingsRequest {

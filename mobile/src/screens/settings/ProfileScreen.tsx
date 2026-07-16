@@ -60,6 +60,22 @@ export default function ProfileScreen({ navigation }: Props) {
 
         <TouchableOpacity
           style={[styles.menuRow, { borderBottomColor: colors.border }]}
+          onPress={() => navigation.navigate('EditProfile')}
+        >
+          <View style={[styles.menuIcon, { backgroundColor: colors.amberDim }]}>
+            <Ionicons name="person" size={20} color={colors.amber} />
+          </View>
+          <View style={styles.menuContent}>
+            <Text style={[styles.menuLabel, { color: colors.text }]}>Edit Profile</Text>
+            <Text style={[styles.menuHint, { color: colors.textDim }]}>
+              Name, unit preference
+            </Text>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color={colors.textDim} />
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.menuRow, { borderBottomColor: colors.border }]}
           onPress={() => navigation.navigate('NotificationSettings')}
         >
           <View style={[styles.menuIcon, { backgroundColor: colors.blueDim }]}>
@@ -71,19 +87,6 @@ export default function ProfileScreen({ navigation }: Props) {
             </Text>
             <Text style={[styles.menuHint, { color: colors.textDim }]}>
               Reminder thresholds and preferences
-            </Text>
-          </View>
-          <Ionicons name="chevron-forward" size={18} color={colors.textDim} />
-        </TouchableOpacity>
-
-        <TouchableOpacity style={[styles.menuRow, { borderBottomColor: colors.border }]}>
-          <View style={[styles.menuIcon, { backgroundColor: colors.amberDim }]}>
-            <Ionicons name="speedometer" size={20} color={colors.amber} />
-          </View>
-          <View style={styles.menuContent}>
-            <Text style={[styles.menuLabel, { color: colors.text }]}>Unit Preference</Text>
-            <Text style={[styles.menuHint, { color: colors.textDim }]}>
-              {profile?.unitPreference === 'mi' ? 'Miles (mi)' : 'Kilometers (km)'}
             </Text>
           </View>
           <Ionicons name="chevron-forward" size={18} color={colors.textDim} />
