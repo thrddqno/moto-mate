@@ -144,7 +144,7 @@ export default function DashboardScreen() {
               onPress={() => { setShowActions(false); setLogServiceVisible(true); }}
             >
               <View style={[styles.actionIcon, { backgroundColor: colors.amberDim }]}>
-                <Ionicons name="wrench" size={22} color={colors.amber} />
+                <Ionicons name="build" size={22} color={colors.amber} />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={[styles.actionLabel, { color: colors.text }]}>Log Service</Text>

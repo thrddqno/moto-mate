@@ -175,7 +175,7 @@ export default function BikeListScreen({ navigation }: Props) {
         onPress={() => setLogServiceVisible(true)}
         activeOpacity={0.8}
       >
-        <Ionicons name="wrench" size={24} color={colors.black} />
+        <Ionicons name="build" size={24} color={colors.black} />
       </TouchableOpacity>
 
       <LogServiceModal
