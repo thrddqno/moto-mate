@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
+import { BackButton } from '../components/routing/BackButton'
 import { useScheduleStore } from '../stores/scheduleStore'
 import { useTemplateStore } from '../stores/templateStore'
 import type { IntervalType, Schedule } from '../types'
@@ -104,6 +105,7 @@ export default function ScheduleFormPage() {
   return (
     <main className="page">
       <header className="top-bar">
+        <BackButton fallback={bikeId ? `/bikes/${bikeId}/schedules` : '/bikes'} label="Back to schedules" />
         <div>
           <p className="eyebrow">Maintenance</p>
           <h1 className="page-title">{isEditing ? 'EDIT SCHEDULE' : 'ADD SCHEDULE'}</h1>

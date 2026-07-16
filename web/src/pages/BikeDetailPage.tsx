@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { QuickActionFab } from '../components/actions/QuickActionFab'
 import { EditBikeModal } from '../components/bikes/EditBikeModal'
+import { BackButton } from '../components/routing/BackButton'
 import { EmptyState } from '../components/ui/EmptyState'
 import { useBikeStore } from '../stores/bikeStore'
 import type { MotorcycleDetail } from '../types'
@@ -71,9 +72,7 @@ export default function BikeDetailPage() {
   return (
     <main className="page">
       <header className="top-bar">
-        <Link className="icon-button" to="/bikes" aria-label="Back to bikes">
-          ‹
-        </Link>
+        <BackButton fallback="/bikes" label="Back to bikes" />
         <button className="icon-button" onClick={() => setEditOpen(true)} type="button" aria-label="Edit bike">
           ✎
         </button>

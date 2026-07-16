@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
+import { BackButton } from '../components/routing/BackButton'
 import { useBikeStore } from '../stores/bikeStore'
 import type { Motorcycle } from '../types'
 
@@ -111,6 +112,7 @@ export default function BikeFormPage() {
   return (
     <main className="page">
       <header className="top-bar">
+        {isEditing ? <BackButton fallback={bikeId ? `/bikes/${bikeId}` : '/bikes'} label="Back to bike" /> : null}
         <div>
           <p className="eyebrow">Garage</p>
           <h1 className="page-title">{isEditing ? 'EDIT BIKE' : 'ADD BIKE'}</h1>

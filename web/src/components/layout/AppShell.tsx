@@ -1,4 +1,5 @@
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
+import { NavigationAudit } from '../routing/NavigationAudit'
 
 const navItems = [
   { to: '/dashboard', icon: '⌂', label: 'Home' },
@@ -14,6 +15,7 @@ export function AppShell() {
   return (
     <div className="app-shell">
       <div className="app-frame">
+        <NavigationAudit />
         <Outlet />
       </div>
       {showNavigation ? (

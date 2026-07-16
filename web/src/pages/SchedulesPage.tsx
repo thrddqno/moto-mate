@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
+import { BackButton } from '../components/routing/BackButton'
 import { ScheduleEditorModal } from '../components/schedules/ScheduleEditorModal'
 import { EmptyState } from '../components/ui/EmptyState'
 import { useScheduleStore } from '../stores/scheduleStore'
@@ -27,6 +28,7 @@ export default function SchedulesPage() {
   return (
     <main className="page">
       <header className="top-bar">
+        <BackButton fallback={bikeId ? `/bikes/${bikeId}` : '/bikes'} label="Back to bike" />
         <div>
           <p className="eyebrow">Maintenance</p>
           <h1 className="page-title">SCHEDULES</h1>
