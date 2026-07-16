@@ -8,14 +8,16 @@ interface StatusDotProps {
   pulsing?: boolean;
 }
 
-const STATUS_COLORS = {
-  overdue: '#FF3D00',
-  'due-soon': '#FFB300',
-  upcoming: '#00E676',
-  ok: '#6B6B6B',
-};
-
 export function StatusDot({ status, size = 10, pulsing = false }: StatusDotProps) {
+  const { colors } = useTheme();
+
+  const STATUS_COLORS = {
+    overdue: colors.red,
+    'due-soon': colors.amber,
+    upcoming: colors.green,
+    ok: colors.textDim,
+  };
+
   const color = STATUS_COLORS[status];
 
   return (

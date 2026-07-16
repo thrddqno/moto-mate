@@ -4,6 +4,7 @@ import WelcomeScreen from '../screens/auth/WelcomeScreen';
 import SignInScreen from '../screens/auth/SignInScreen';
 import SignUpScreen from '../screens/auth/SignUpScreen';
 import ProfileSetupScreen from '../screens/auth/ProfileSetupScreen';
+import { useTheme } from '../context/ThemeContext';
 
 export type AuthStackParamList = {
   Welcome: undefined;
@@ -15,11 +16,12 @@ export type AuthStackParamList = {
 const Stack = createNativeStackNavigator<AuthStackParamList>();
 
 export default function AuthStack() {
+  const { colors } = useTheme();
   return (
     <Stack.Navigator
       screenOptions={{
         headerShown: false,
-        contentStyle: { backgroundColor: '#0D0D0D' },
+        contentStyle: { backgroundColor: colors.bg },
         animation: 'fade',
       }}
     >

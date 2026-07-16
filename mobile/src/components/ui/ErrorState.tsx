@@ -19,7 +19,7 @@ export function ErrorState({ message, onRetry }: ErrorStateProps) {
           { backgroundColor: colors.redDim, borderColor: colors.red },
         ]}
       >
-        <Text style={styles.icon}>!</Text>
+        <Text style={[styles.icon, { color: colors.red }]}>!</Text>
       </View>
       <Text
         style={[

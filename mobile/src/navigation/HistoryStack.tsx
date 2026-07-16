@@ -1,6 +1,7 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import HistoryScreen from '../screens/service/HistoryScreen';
+import { useTheme } from '../context/ThemeContext';
 
 export type HistoryStackParamList = {
   History: undefined;
@@ -9,11 +10,12 @@ export type HistoryStackParamList = {
 const Stack = createNativeStackNavigator<HistoryStackParamList>();
 
 export default function HistoryStack() {
+  const { colors } = useTheme();
   return (
     <Stack.Navigator
       screenOptions={{
         headerShown: false,
-        contentStyle: { backgroundColor: '#0D0D0D' },
+        contentStyle: { backgroundColor: colors.bg },
       }}
     >
       <Stack.Screen name="History" component={HistoryScreen} />

@@ -7,6 +7,7 @@ import BikeDetailScreen from '../screens/bikes/BikeDetailScreen';
 import SchedulesScreen from '../screens/schedules/SchedulesScreen';
 import ScheduleFormScreen from '../screens/schedules/ScheduleFormScreen';
 import type { Schedule } from '../types';
+import { useTheme } from '../context/ThemeContext';
 
 export type BikesStackParamList = {
   BikeList: undefined;
@@ -20,11 +21,12 @@ export type BikesStackParamList = {
 const Stack = createNativeStackNavigator<BikesStackParamList>();
 
 export default function BikesStack() {
+  const { colors } = useTheme();
   return (
     <Stack.Navigator
       screenOptions={{
         headerShown: false,
-        contentStyle: { backgroundColor: '#0D0D0D' },
+        contentStyle: { backgroundColor: colors.bg },
       }}
     >
       <Stack.Screen name="BikeList" component={BikeListScreen} />
