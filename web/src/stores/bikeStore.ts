@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import api from '../services/api'
+import { useDashboardStore } from './dashboardStore'
 import type {
   ApiResponse,
   CreateMotorcycleRequest,
@@ -42,6 +43,7 @@ export const useBikeStore = create<BikeStore>((set) => ({
     const res = await api.post<ApiResponse<Motorcycle>>('/motorcycles', data)
     if (res.data.success && res.data.data) {
       set((state) => ({ bikes: [res.data.data!, ...state.bikes] }))
+      useDashboardStore.getState().invalidate()
       return res.data.data
     }
     return null
@@ -53,6 +55,7 @@ export const useBikeStore = create<BikeStore>((set) => ({
       set((state) => ({
         bikes: state.bikes.map((bike) => (bike.id === id ? res.data.data! : bike)),
       }))
+      useDashboardStore.getState().invalidate()
       return res.data.data
     }
     return null
@@ -61,6 +64,7 @@ export const useBikeStore = create<BikeStore>((set) => ({
   deleteBike: async (id) => {
     await api.delete(`/motorcycles/${id}`)
     set((state) => ({ bikes: state.bikes.filter((bike) => bike.id !== id) }))
+    useDashboardStore.getState().invalidate()
   },
 
   getBikeDetail: async (id) => {
