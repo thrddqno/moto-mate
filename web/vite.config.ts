@@ -8,12 +8,19 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.svg', 'app-icon.svg', 'maskable-icon.svg'],
+      includeAssets: [
+        'favicon.svg',
+        'app-icon.svg',
+        'maskable-icon.svg',
+        'pwa-192x192.png',
+        'pwa-512x512.png',
+        'maskable-512x512.png',
+      ],
       manifest: {
         name: 'Moto Mate',
         short_name: 'Moto Mate',
         description: 'Mobile-first motorcycle maintenance tracking for mileage and date-based service schedules.',
-        start_url: '/dashboard?source=pwa',
+        start_url: '/',
         scope: '/',
         display: 'standalone',
         orientation: 'portrait-primary',
@@ -22,14 +29,19 @@ export default defineConfig({
         categories: ['utilities', 'productivity'],
         icons: [
           {
-            src: '/app-icon.svg',
-            sizes: 'any',
-            type: 'image/svg+xml',
+            src: '/pwa-192x192.png',
+            sizes: '192x192',
+            type: 'image/png',
           },
           {
-            src: '/maskable-icon.svg',
-            sizes: 'any',
-            type: 'image/svg+xml',
+            src: '/pwa-512x512.png',
+            sizes: '512x512',
+            type: 'image/png',
+          },
+          {
+            src: '/maskable-512x512.png',
+            sizes: '512x512',
+            type: 'image/png',
             purpose: 'maskable',
           },
         ],
