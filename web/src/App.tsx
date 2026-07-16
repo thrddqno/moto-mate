@@ -3,6 +3,8 @@ import { AuthProvider } from './context/AuthContext'
 import { AppShell } from './components/layout/AppShell'
 import { ProtectedRoute } from './components/routing/ProtectedRoute'
 import DashboardPage from './pages/DashboardPage'
+import BikeDetailPage from './pages/BikeDetailPage'
+import BikeFormPage from './pages/BikeFormPage'
 import BikesPage from './pages/BikesPage'
 import HistoryPage from './pages/HistoryPage'
 import SettingsPage from './pages/SettingsPage'
@@ -41,6 +43,30 @@ const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             <BikesPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'bikes/new',
+        element: (
+          <ProtectedRoute>
+            <BikeFormPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'bikes/:bikeId',
+        element: (
+          <ProtectedRoute>
+            <BikeDetailPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'bikes/:bikeId/edit',
+        element: (
+          <ProtectedRoute>
+            <BikeFormPage />
           </ProtectedRoute>
         ),
       },
