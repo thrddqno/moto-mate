@@ -529,6 +529,64 @@ a {
   color: var(--color-red);
 }
 
+.filter-control {
+  display: grid;
+  gap: 7px;
+  margin-bottom: 16px;
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.filter-control select {
+  min-height: 46px;
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  padding: 0 12px;
+  color: var(--color-text);
+  background: var(--color-surface-elevated);
+}
+
+.history-list {
+  display: grid;
+  gap: 10px;
+  padding-bottom: 96px;
+}
+
+.history-card {
+  padding: 14px;
+}
+
+.history-card h2,
+.history-card p {
+  margin: 0;
+}
+
+.history-card h2 {
+  font-size: 16px;
+}
+
+.history-card p {
+  margin-top: 4px;
+  color: var(--color-text-secondary);
+  font-size: 13px;
+}
+
+.history-card small {
+  display: block;
+  margin-top: 7px;
+  color: var(--color-amber);
+  font-family: var(--font-mono);
+}
+
+.history-card .history-notes {
+  margin-top: 10px;
+  color: var(--color-text);
+  line-height: 1.45;
+}
+
 .form-stack textarea {
   min-height: 110px;
   padding-block: 12px;
