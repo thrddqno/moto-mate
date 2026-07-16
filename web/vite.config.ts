@@ -15,8 +15,11 @@ export default defineConfig({
         'pwa-192x192.png',
         'pwa-512x512.png',
         'maskable-512x512.png',
+        'pwa-screenshot-desktop.png',
+        'pwa-screenshot-mobile.png',
       ],
       manifest: {
+        id: '/',
         name: 'Moto Mate',
         short_name: 'Moto Mate',
         description: 'Mobile-first motorcycle maintenance tracking for mileage and date-based service schedules.',
@@ -27,6 +30,21 @@ export default defineConfig({
         background_color: '#0D0D0D',
         theme_color: '#FFB300',
         categories: ['utilities', 'productivity'],
+        screenshots: [
+          {
+            src: '/pwa-screenshot-desktop.png',
+            sizes: '1600x900',
+            type: 'image/png',
+            form_factor: 'wide',
+            label: 'Moto Mate dashboard with maintenance alerts in a wide desktop layout',
+          },
+          {
+            src: '/pwa-screenshot-mobile.png',
+            sizes: '390x844',
+            type: 'image/png',
+            label: 'Moto Mate mobile dashboard showing due maintenance tasks and quick actions',
+          },
+        ],
         icons: [
           {
             src: '/pwa-192x192.png',
