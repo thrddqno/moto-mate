@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import api from '../services/api'
 import { useDashboardStore } from './dashboardStore'
+import { normalizeCursorPage } from '../utils/pagination'
 import type { ApiResponse, CreateServiceLogRequest, CursorPageResponse, ServiceLog } from '../types'
 
 interface ServiceLogStore {
@@ -28,12 +29,13 @@ export const useServiceLogStore = create<ServiceLogStore>((set) => ({
   fetchLogs: async (motorcycleId) => {
     set({ loading: true, error: null })
     try {
-      const res = await api.get<ApiResponse<CursorPageResponse<ServiceLog>>>(historyPath(motorcycleId))
+      const res = await api.get<ApiResponse<CursorPageResponse<ServiceLog> | ServiceLog[]>>(historyPath(motorcycleId))
       if (res.data.success && res.data.data) {
+        const page = normalizeCursorPage(res.data.data)
         set({
-          logs: res.data.data.content,
-          nextCursor: res.data.data.nextCursor,
-          hasMore: res.data.data.hasMore,
+          logs: page.content,
+          nextCursor: page.nextCursor,
+          hasMore: page.hasMore,
           loading: false,
         })
       } else {
@@ -49,14 +51,15 @@ export const useServiceLogStore = create<ServiceLogStore>((set) => ({
     if (!state.hasMore || !state.nextCursor || state.loading) return
     set({ loading: true, error: null })
     try {
-      const res = await api.get<ApiResponse<CursorPageResponse<ServiceLog>>>(historyPath(motorcycleId), {
+      const res = await api.get<ApiResponse<CursorPageResponse<ServiceLog> | ServiceLog[]>>(historyPath(motorcycleId), {
         params: { cursor: state.nextCursor },
       })
       if (res.data.success && res.data.data) {
+        const page = normalizeCursorPage(res.data.data)
         set((current) => ({
-          logs: [...current.logs, ...res.data.data!.content],
-          nextCursor: res.data.data!.nextCursor,
-          hasMore: res.data.data!.hasMore,
+          logs: [...(current.logs || []), ...page.content],
+          nextCursor: page.nextCursor,
+          hasMore: page.hasMore,
           loading: false,
         }))
       } else {

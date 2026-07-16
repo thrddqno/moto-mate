@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import api from '../services/api'
 import { useDashboardStore } from './dashboardStore'
+import { normalizeCursorPage } from '../utils/pagination'
 import type {
   ApiResponse,
   CreateMotorcycleRequest,
@@ -35,12 +36,13 @@ export const useBikeStore = create<BikeStore>((set) => ({
   fetchBikes: async () => {
     set({ loading: true, error: null })
     try {
-      const res = await api.get<ApiResponse<CursorPageResponse<Motorcycle>>>('/motorcycles')
+      const res = await api.get<ApiResponse<CursorPageResponse<Motorcycle> | Motorcycle[]>>('/motorcycles')
       if (res.data.success && res.data.data) {
+        const page = normalizeCursorPage(res.data.data)
         set({
-          bikes: res.data.data.content,
-          nextCursor: res.data.data.nextCursor,
-          hasMore: res.data.data.hasMore,
+          bikes: page.content,
+          nextCursor: page.nextCursor,
+          hasMore: page.hasMore,
           loading: false,
         })
       } else {
@@ -56,14 +58,15 @@ export const useBikeStore = create<BikeStore>((set) => ({
     if (!state.hasMore || !state.nextCursor || state.loading) return
     set({ loading: true, error: null })
     try {
-      const res = await api.get<ApiResponse<CursorPageResponse<Motorcycle>>>('/motorcycles', {
+      const res = await api.get<ApiResponse<CursorPageResponse<Motorcycle> | Motorcycle[]>>('/motorcycles', {
         params: { cursor: state.nextCursor },
       })
       if (res.data.success && res.data.data) {
+        const page = normalizeCursorPage(res.data.data)
         set((current) => ({
-          bikes: [...current.bikes, ...res.data.data!.content],
-          nextCursor: res.data.data!.nextCursor,
-          hasMore: res.data.data!.hasMore,
+          bikes: [...(current.bikes || []), ...page.content],
+          nextCursor: page.nextCursor,
+          hasMore: page.hasMore,
           loading: false,
         }))
       } else {

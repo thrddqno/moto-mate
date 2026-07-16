@@ -6,7 +6,8 @@ import { useBikeStore } from '../stores/bikeStore'
 import { formatMileage } from '../utils/format'
 
 export default function BikesPage() {
-  const { bikes, error, fetchBikes, hasMore, loadMoreBikes, loading } = useBikeStore()
+  const { bikes: storeBikes, error, fetchBikes, hasMore, loadMoreBikes, loading } = useBikeStore()
+  const bikes = storeBikes || []
 
   useEffect(() => {
     void fetchBikes()

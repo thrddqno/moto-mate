@@ -9,14 +9,15 @@ interface MileageModalProps {
 
 export function MileageModal({ bikeId, open, onClose }: MileageModalProps) {
   const { bikes, fetchBikes, updateMileage } = useBikeStore()
-  const bike = bikes.find((item) => item.id === bikeId)
+  const safeBikes = bikes || []
+  const bike = safeBikes.find((item) => item.id === bikeId)
   const [mileage, setMileage] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
-    if (open && bikes.length === 0) void fetchBikes()
-  }, [bikes.length, fetchBikes, open])
+    if (open && safeBikes.length === 0) void fetchBikes()
+  }, [fetchBikes, open, safeBikes.length])
 
   function closeAndReset() {
     setMileage('')

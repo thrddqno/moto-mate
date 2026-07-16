@@ -6,8 +6,10 @@ import { useServiceLogStore } from '../stores/serviceLogStore'
 import { formatDate, formatMileage } from '../utils/format'
 
 export default function HistoryPage() {
-  const { bikes, fetchBikes } = useBikeStore()
-  const { error, fetchLogs, hasMore, loadMoreLogs, loading, logs } = useServiceLogStore()
+  const { bikes: storeBikes, fetchBikes } = useBikeStore()
+  const { error, fetchLogs, hasMore, loadMoreLogs, loading, logs: storeLogs } = useServiceLogStore()
+  const bikes = storeBikes || []
+  const logs = storeLogs || []
   const [selectedBikeId, setSelectedBikeId] = useState('')
 
   useEffect(() => {

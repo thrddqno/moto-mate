@@ -11,7 +11,8 @@ interface QuickActionFabProps {
 }
 
 export function QuickActionFab({ bikeId }: QuickActionFabProps) {
-  const { bikes, fetchBikes } = useBikeStore()
+  const { bikes: storeBikes, fetchBikes } = useBikeStore()
+  const bikes = storeBikes || []
   const [step, setStep] = useState<Step>(null)
   const [selectedBikeId, setSelectedBikeId] = useState<string | null>(bikeId || null)
   const [activeAction, setActiveAction] = useState<Action | null>(null)
