@@ -1,5 +1,8 @@
 import { initializeApp, getApps } from 'firebase/app';
-import { getAuth, Auth } from 'firebase/auth';
+import type { Auth } from 'firebase/auth';
+// @ts-expect-error - getReactNativePersistence is available in the RN build at runtime
+import { initializeAuth, getReactNativePersistence } from 'firebase/auth';
+import ReactNativeAsyncStorage from '@react-native-async-storage/async-storage';
 
 const firebaseConfig = {
   apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY,
@@ -11,6 +14,7 @@ const firebaseConfig = {
 };
 
 const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
-const auth: Auth = getAuth(app);
+const persistence = getReactNativePersistence(ReactNativeAsyncStorage);
+const auth: Auth = initializeAuth(app, { persistence });
 
 export { app, auth };
