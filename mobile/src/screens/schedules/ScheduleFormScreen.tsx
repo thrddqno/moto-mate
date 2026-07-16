@@ -52,13 +52,18 @@ export default function ScheduleFormScreen({ route, navigation }: Props) {
 
   const { colors, borderRadius } = useTheme();
   const insets = useSafeAreaInsets();
-  const { templates, fetchTemplates } = useTemplateStore();
+  const { templates, fetchTemplates, createTemplate } = useTemplateStore();
   const { createSchedule, updateSchedule, deleteSchedule } = useScheduleStore();
 
   const [activeCategory, setActiveCategory] = useState<MaintenanceCategory | null>(null);
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(
     editSchedule?.templateId || null,
   );
+
+  const [isCustom, setIsCustom] = useState(false);
+  const [customName, setCustomName] = useState('');
+  const [customCategory, setCustomCategory] = useState<MaintenanceCategory>('GENERAL');
+
   const [intervalType, setIntervalType] = useState<IntervalType>(
     editSchedule?.intervalType || 'MILEAGE',
   );
@@ -82,9 +87,15 @@ export default function ScheduleFormScreen({ route, navigation }: Props) {
 
   const selectedTemplate = templates.find((t) => t.id === selectedTemplateId);
 
+  const showIntervalStep = !!selectedTemplateId || isCustom;
+
   async function handleSave() {
-    if (!selectedTemplateId) {
+    if (!showIntervalStep) {
       Alert.alert('Required', 'Please select a maintenance task');
+      return;
+    }
+    if (isCustom && !customName.trim()) {
+      Alert.alert('Required', 'Please enter a name for your custom task');
       return;
     }
     if (intervalType === 'MILEAGE' && !intervalMileage) {
@@ -102,18 +113,32 @@ export default function ScheduleFormScreen({ route, navigation }: Props) {
 
     setSaving(true);
     try {
+      let templateId = selectedTemplateId;
+
+      if (isCustom) {
+        const newTemplate = await createTemplate({
+          name: customName.trim(),
+          category: customCategory,
+          defaultIntervalMileage: intervalMileage ? parseInt(intervalMileage, 10) : undefined,
+          defaultIntervalDays: intervalDays ? parseInt(intervalDays, 10) : undefined,
+        });
+        if (!newTemplate) {
+          Alert.alert('Error', 'Failed to create custom task');
+          setSaving(false);
+          return;
+        }
+        templateId = newTemplate.id;
+      }
+
       const payload: any = {
-        templateId: selectedTemplateId,
+        templateId,
         intervalType,
         intervalMileage: intervalMileage ? parseInt(intervalMileage, 10) : undefined,
         intervalDays: intervalDays ? parseInt(intervalDays, 10) : undefined,
       };
 
       if (isEditing && editSchedule) {
-        await updateSchedule(bikeId, editSchedule.id, {
-          ...payload,
-          isActive,
-        });
+        await updateSchedule(bikeId, editSchedule.id, { ...payload, isActive });
       } else {
         await createSchedule(bikeId, payload);
       }
@@ -166,11 +191,35 @@ export default function ScheduleFormScreen({ route, navigation }: Props) {
         style={{ flex: 1 }}
       >
         <ScrollView contentContainerStyle={styles.scroll}>
-          {!selectedTemplateId ? (
+          {!showIntervalStep ? (
             <>
               <Text style={[styles.sectionLabel, { color: colors.text }]}>
                 SELECT TASK
               </Text>
+
+              <TouchableOpacity
+                style={[
+                  styles.customCard,
+                  { backgroundColor: colors.surface, borderColor: colors.blue, borderRadius: borderRadius.md },
+                ]}
+                onPress={() => {
+                  setIsCustom(true);
+                  setCustomName('');
+                  setCustomCategory('GENERAL');
+                }}
+              >
+                <View style={[styles.customIcon, { backgroundColor: colors.blueDim }]}>
+                  <Ionicons name="add" size={20} color={colors.blue} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.customCardTitle, { color: colors.text }]}>Custom Task</Text>
+                  <Text style={[styles.customCardDesc, { color: colors.textDim }]}>
+                    Create your own maintenance task
+                  </Text>
+                </View>
+                <Ionicons name="chevron-forward" size={16} color={colors.textDim} />
+              </TouchableOpacity>
+
               <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
@@ -240,6 +289,7 @@ export default function ScheduleFormScreen({ route, navigation }: Props) {
                     ]}
                     onPress={() => {
                       setSelectedTemplateId(tmpl.id);
+                      setIsCustom(false);
                       if (tmpl.defaultIntervalMileage) setIntervalMileage(tmpl.defaultIntervalMileage.toString());
                       if (tmpl.defaultIntervalDays) setIntervalDays(tmpl.defaultIntervalDays.toString());
                     }}
@@ -269,15 +319,65 @@ export default function ScheduleFormScreen({ route, navigation }: Props) {
           ) : (
             <>
               <TouchableOpacity
-                onPress={() => setSelectedTemplateId(null)}
+                onPress={() => {
+                  setSelectedTemplateId(null);
+                  setIsCustom(false);
+                }}
                 style={{ marginBottom: 16 }}
               >
                 <Text style={[styles.backLink, { color: colors.amber }]}>
-                  ← {selectedTemplate?.name || 'Change task'}
+                  ← {isCustom ? customName || 'Custom task' : (selectedTemplate?.name || 'Change task')}
                 </Text>
               </TouchableOpacity>
 
-              <Text style={[styles.sectionLabel, { color: colors.text }]}>
+              {isCustom && (
+                <>
+                  <Input
+                    label="Task Name"
+                    value={customName}
+                    onChangeText={setCustomName}
+                    placeholder="e.g. Brake Fluid Flush"
+                    containerStyle={{ marginBottom: 16 }}
+                  />
+                  <Text style={[styles.sectionLabel, { color: colors.text }]}>
+                    CATEGORY
+                  </Text>
+                  <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    style={styles.categoryRow}
+                    contentContainerStyle={{ gap: 8 }}
+                  >
+                    {CATEGORIES.map((cat) => (
+                      <TouchableOpacity
+                        key={cat.key}
+                        style={[
+                          styles.categoryChip,
+                          {
+                            backgroundColor: customCategory === cat.key ? colors.amberDim : colors.surface,
+                            borderColor: customCategory === cat.key ? colors.amber : colors.border,
+                            borderRadius: borderRadius.full,
+                          },
+                        ]}
+                        onPress={() => setCustomCategory(cat.key)}
+                      >
+                        <Text
+                          style={[
+                            styles.categoryChipText,
+                            {
+                              color: customCategory === cat.key ? colors.amber : colors.textSecondary,
+                            },
+                          ]}
+                        >
+                          {cat.label}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                </>
+              )}
+
+              <Text style={[styles.sectionLabel, { color: colors.text, marginTop: 20 }]}>
                 INTERVAL TYPE
               </Text>
               <View style={styles.segmentedControl}>
@@ -404,6 +504,30 @@ const styles = StyleSheet.create({
     fontSize: 12,
     letterSpacing: 1.5,
     marginBottom: 12,
+  },
+  customCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 14,
+    borderWidth: 1,
+    marginBottom: 16,
+    gap: 12,
+  },
+  customIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  customCardTitle: {
+    fontFamily: 'Karla_600SemiBold',
+    fontSize: 15,
+  },
+  customCardDesc: {
+    fontFamily: 'Karla_400Regular',
+    fontSize: 12,
+    marginTop: 2,
   },
   categoryRow: { marginBottom: 16 },
   categoryChip: {

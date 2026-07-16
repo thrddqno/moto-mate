@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import api from '../services/api';
-import type { ApiResponse, MaintenanceTemplate, MaintenanceCategory } from '../types';
+import type { ApiResponse, MaintenanceTemplate, MaintenanceCategory, CreateTemplateRequest } from '../types';
 
 interface TemplateStore {
   templates: MaintenanceTemplate[];
@@ -9,6 +9,7 @@ interface TemplateStore {
   lastFetched: number | null;
   fetchTemplates: (category?: MaintenanceCategory) => Promise<void>;
   getByCategory: (category: MaintenanceCategory) => MaintenanceTemplate[];
+  createTemplate: (data: CreateTemplateRequest) => Promise<MaintenanceTemplate | null>;
   invalidate: () => void;
 }
 
@@ -35,6 +36,19 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
 
   getByCategory: (category) => {
     return get().templates.filter((t) => t.category === category);
+  },
+
+  createTemplate: async (data) => {
+    try {
+      const res = await api.post<ApiResponse<MaintenanceTemplate>>('/templates', data);
+      if (res.data.success && res.data.data) {
+        set((state) => ({ templates: [...state.templates, res.data.data!] }));
+        return res.data.data;
+      }
+      return null;
+    } catch {
+      return null;
+    }
   },
 
   invalidate: () => set({ lastFetched: null }),
