@@ -1,6 +1,6 @@
-import React, { useState, useCallback } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import api from '../services/api';
-import { ApiResponse } from '../types/api';
+import type { ApiResponse } from '../types';
 
 interface UseApiState<T> {
   data: T | null;
@@ -8,52 +8,40 @@ interface UseApiState<T> {
   error: string | null;
 }
 
-export function useApi<T>() {
+export function useApi<T>(
+  url: string | null,
+  options?: { immediate?: boolean },
+) {
   const [state, setState] = useState<UseApiState<T>>({
     data: null,
-    loading: false,
+    loading: options?.immediate !== false,
     error: null,
   });
 
-  const execute = useCallback(
-    async (request: () => Promise<{ data: ApiResponse<T> }>) => {
-      setState({ data: null, loading: true, error: null });
-      try {
-        const response = await request();
-        const body = response.data;
-        if (!body.success) {
-          const msg = body.errors?.join(', ') || body.message || 'Unknown error';
-          setState({ data: null, loading: false, error: msg });
-          return null;
-        }
-        setState({ data: body.data, loading: false, error: null });
-        return body.data;
-      } catch (err: any) {
-        const msg =
-          err.response?.data?.message ||
-          err.response?.data?.errors?.join(', ') ||
-          err.message ||
-          'Network error';
-        setState({ data: null, loading: false, error: msg });
-        return null;
+  const fetch = useCallback(async () => {
+    if (!url) return;
+    setState((s) => ({ ...s, loading: true, error: null }));
+    try {
+      const res = await api.get<ApiResponse<T>>(url);
+      if (res.data.success && res.data.data) {
+        setState({ data: res.data.data, loading: false, error: null });
+      } else {
+        setState({ data: null, loading: false, error: res.data.message });
       }
-    },
-    []
-  );
+    } catch (err: any) {
+      setState({
+        data: null,
+        loading: false,
+        error: err?.message || 'Request failed',
+      });
+    }
+  }, [url]);
 
-  const reset = useCallback(() => {
-    setState({ data: null, loading: false, error: null });
-  }, []);
+  useEffect(() => {
+    if (options?.immediate !== false && url) {
+      fetch();
+    }
+  }, [fetch, url, options?.immediate]);
 
-  return { ...state, execute, reset };
-}
-
-// Convenience hooks for specific endpoints
-
-export function useMotorcycles() {
-  return useApi<any[]>();
-}
-
-export function useDashboard() {
-  return useApi<any>();
+  return { ...state, refetch: fetch };
 }

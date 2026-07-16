@@ -1,42 +1,39 @@
-import axios from 'axios';
-import { Platform } from 'react-native';
+import axios, { AxiosInstance, InternalAxiosRequestConfig } from 'axios';
 
-const BASE_URL = process.env.EXPO_PUBLIC_API_URL || Platform.select({
-  android: 'http://10.0.2.2:8081/api/v1',
-  ios: 'http://localhost:8081/api/v1',
-  default: 'http://localhost:8081/api/v1',
-});
+let tokenProvider: (() => Promise<string | null>) | null = null;
 
-const api = axios.create({
-  baseURL: BASE_URL,
+export function setTokenProvider(provider: () => Promise<string | null>) {
+  tokenProvider = provider;
+}
+
+const api: AxiosInstance = axios.create({
+  baseURL: process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8081/api/v1',
   timeout: 15000,
-  headers: { 'Content-Type': 'application/json' },
+  headers: {
+    'Content-Type': 'application/json',
+  },
 });
 
-let getToken: (() => Promise<string | null>) | null = null;
-
-export const setTokenProvider = (provider: () => Promise<string | null>) => {
-  getToken = provider;
-};
-
-api.interceptors.request.use(async (config) => {
-  if (getToken) {
-    const token = await getToken();
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+api.interceptors.request.use(
+  async (config: InternalAxiosRequestConfig) => {
+    if (tokenProvider) {
+      const token = await tokenProvider();
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
     }
-  }
-  return config;
-});
+    return config;
+  },
+  (error) => Promise.reject(error),
+);
 
 api.interceptors.response.use(
   (response) => response,
-  async (error) => {
+  (error) => {
     if (error.response?.status === 401) {
-      // Token expired or invalid — auth context will handle sign out
     }
     return Promise.reject(error);
-  }
+  },
 );
 
 export default api;
