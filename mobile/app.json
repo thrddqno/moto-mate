@@ -28,17 +28,23 @@
         "expo-font",
         {
           "fonts": [
-            "node_modules/@expo-google-fonts/audiowide/Audiowide_400Regular.ttf",
-            "node_modules/@expo-google-fonts/karla/Karla_400Regular.ttf",
-            "node_modules/@expo-google-fonts/karla/Karla_500Medium.ttf",
-            "node_modules/@expo-google-fonts/karla/Karla_600SemiBold.ttf",
-            "node_modules/@expo-google-fonts/karla/Karla_700Bold.ttf",
-            "node_modules/@expo-google-fonts/jetbrains-mono/JetBrainsMono_400Regular.ttf",
-            "node_modules/@expo-google-fonts/jetbrains-mono/JetBrainsMono_500Medium.ttf",
-            "node_modules/@expo-google-fonts/jetbrains-mono/JetBrainsMono_700Bold.ttf"
+            "node_modules/@expo-google-fonts/audiowide/400Regular/Audiowide_400Regular.ttf",
+            "node_modules/@expo-google-fonts/karla/400Regular/Karla_400Regular.ttf",
+            "node_modules/@expo-google-fonts/karla/500Medium/Karla_500Medium.ttf",
+            "node_modules/@expo-google-fonts/karla/600SemiBold/Karla_600SemiBold.ttf",
+            "node_modules/@expo-google-fonts/karla/700Bold/Karla_700Bold.ttf",
+            "node_modules/@expo-google-fonts/jetbrains-mono/400Regular/JetBrainsMono_400Regular.ttf",
+            "node_modules/@expo-google-fonts/jetbrains-mono/500Medium/JetBrainsMono_500Medium.ttf",
+            "node_modules/@expo-google-fonts/jetbrains-mono/700Bold/JetBrainsMono_700Bold.ttf"
           ]
         }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "99ff08de-e802-44bc-a89c-81b762ff4504"
+      }
+    },
+    "owner": "thrddqno"
   }
 }
