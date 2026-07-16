@@ -9,7 +9,7 @@ const navItems = [
 
 export function AppShell() {
   const location = useLocation()
-  const showNavigation = location.pathname !== '/welcome'
+  const showNavigation = !['/welcome', '/sign-in', '/sign-up', '/profile-setup'].includes(location.pathname)
 
   return (
     <div className="app-shell">

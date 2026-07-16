@@ -1,5 +1,6 @@
 import { EmptyState } from '../components/ui/EmptyState'
 import { StatusSection } from '../components/ui/StatusSection'
+import { useAuth } from '../context/AuthContext'
 import type { DashboardResponse } from '../types'
 
 const placeholderDashboard: DashboardResponse = {
@@ -11,13 +12,15 @@ const placeholderDashboard: DashboardResponse = {
 }
 
 export default function DashboardPage() {
+  const { profile, user } = useAuth()
   const dashboard = placeholderDashboard
+  const displayName = profile?.displayName || user?.displayName
 
   return (
     <main className="page">
       <header className="top-bar">
         <div>
-          <p className="eyebrow">Dashboard</p>
+          <p className="eyebrow">{displayName ? `Ready, ${displayName}` : 'Dashboard'}</p>
           <h1 className="brand-title">MOTO MATE</h1>
         </div>
         <button className="icon-button" type="button" aria-label="Notification settings">

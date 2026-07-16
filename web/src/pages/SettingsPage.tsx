@@ -1,4 +1,15 @@
+import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
+
 export default function SettingsPage() {
+  const { profile, signOut, user } = useAuth()
+  const navigate = useNavigate()
+
+  async function handleSignOut() {
+    await signOut()
+    navigate('/welcome', { replace: true })
+  }
+
   return (
     <main className="page">
       <header className="top-bar">
@@ -7,15 +18,23 @@ export default function SettingsPage() {
           <h1 className="page-title">SETTINGS</h1>
         </div>
       </header>
-      <section className="card summary-card">
-        <h2 className="section-heading" style={{ marginTop: 0 }}>
-          PWA STATUS
-        </h2>
-        <p style={{ color: 'var(--color-text-secondary)', lineHeight: 1.6, margin: 0 }}>
-          This web target is configured as the replacement mobile-first PWA. Firebase auth, backend data,
-          and push registration are migrated in the next tickets.
-        </p>
-      </section>
+      <div className="settings-list">
+        <section className="settings-row card">
+          <div>
+            <strong>{profile?.displayName || user?.displayName || 'Moto Mate Rider'}</strong>
+            <span>{profile?.email || user?.email || 'Signed in with Firebase'}</span>
+          </div>
+        </section>
+        <section className="settings-row card">
+          <div>
+            <strong>Units</strong>
+            <span>{profile?.unitPreference || 'km'}</span>
+          </div>
+        </section>
+        <button className="button button--ghost" onClick={handleSignOut} type="button">
+          Sign Out
+        </button>
+      </div>
     </main>
   )
 }

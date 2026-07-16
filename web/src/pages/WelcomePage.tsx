@@ -14,11 +14,11 @@ export default function WelcomePage() {
         </p>
       </div>
       <div className="button-row">
-        <Link className="button" to="/dashboard">
-          Open Dashboard
+        <Link className="button" to="/sign-in">
+          Sign In
         </Link>
-        <Link className="button button--ghost" to="/bikes">
-          View Bikes
+        <Link className="button button--ghost" to="/sign-up">
+          Create Account
         </Link>
       </div>
     </main>

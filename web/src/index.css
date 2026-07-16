@@ -303,6 +303,12 @@ a {
   background: var(--color-amber);
   font-weight: 800;
   text-decoration: none;
+  cursor: pointer;
+}
+
+.button:disabled {
+  cursor: not-allowed;
+  opacity: 0.68;
 }
 
 .button--ghost {
@@ -374,6 +380,98 @@ a {
   background: var(--color-green-soft);
   font-family: var(--font-mono);
   font-size: 12px;
+}
+
+.auth-page {
+  display: grid;
+  min-height: 100svh;
+  align-items: center;
+  padding-bottom: max(24px, env(safe-area-inset-bottom));
+}
+
+.auth-card {
+  display: grid;
+  gap: 14px;
+  padding: 24px;
+}
+
+.form-stack {
+  display: grid;
+  gap: 14px;
+  margin-top: 10px;
+}
+
+.form-stack label {
+  display: grid;
+  gap: 7px;
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.form-stack input,
+.form-stack select,
+.form-stack textarea {
+  width: 100%;
+  min-height: 50px;
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  padding: 0 14px;
+  color: var(--color-text);
+  background: var(--color-surface-elevated);
+}
+
+.form-stack textarea {
+  min-height: 110px;
+  padding-block: 12px;
+  resize: vertical;
+}
+
+.form-error {
+  margin: 0;
+  border: 1px solid rgba(255, 61, 0, 0.32);
+  border-radius: 14px;
+  padding: 10px 12px;
+  color: var(--color-red);
+  background: var(--color-red-soft);
+  font-size: 13px;
+}
+
+.auth-switch {
+  margin: 8px 0 0;
+  color: var(--color-text-secondary);
+  text-align: center;
+}
+
+.auth-switch a {
+  color: var(--color-amber);
+  font-weight: 800;
+}
+
+.settings-list {
+  display: grid;
+  gap: 12px;
+}
+
+.settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px;
+}
+
+.settings-row strong,
+.settings-row span {
+  display: block;
+}
+
+.settings-row span {
+  margin-top: 3px;
+  color: var(--color-text-secondary);
+  font-size: 13px;
 }
 
 @media (min-width: 700px) {
