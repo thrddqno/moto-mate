@@ -26,6 +26,18 @@ import { formatDaysRemaining, formatMilesRemaining } from '../../utils/format';
 import { getStatusColor } from '../../utils/calculation';
 import type { DashboardItem } from '../../types';
 
+function getGreeting(displayName?: string | null): string {
+  const hour = new Date().getHours();
+  let timeGreeting: string;
+  if (hour >= 5 && hour < 12) timeGreeting = 'Good morning';
+  else if (hour >= 12 && hour < 17) timeGreeting = 'Good afternoon';
+  else if (hour >= 17 && hour < 22) timeGreeting = 'Good evening';
+  else timeGreeting = 'Hey';
+
+  if (displayName) return `${timeGreeting}, ${displayName}`;
+  return 'Dashboard';
+}
+
 export default function DashboardScreen() {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
@@ -35,6 +47,12 @@ export default function DashboardScreen() {
   const [showActions, setShowActions] = useState(false);
   const [logServiceVisible, setLogServiceVisible] = useState(false);
   const [mileageVisible, setMileageVisible] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<DashboardItem | null>(null);
+
+  function handleCardTap(item: DashboardItem) {
+    setSelectedItem(item);
+    setLogServiceVisible(true);
+  }
 
   useEffect(() => {
     if (!lastFetched) fetchDashboard();
@@ -67,7 +85,7 @@ export default function DashboardScreen() {
         <View style={styles.header}>
           <View>
             <Text style={[styles.greeting, { color: colors.textDim }]}>
-              {profile?.displayName ? `Hey, ${profile.displayName}` : 'Dashboard'}
+              {getGreeting(profile?.displayName)}
             </Text>
             <Text style={[styles.headerTitle, { color: colors.text }]}>MOTO MATE</Text>
           </View>
@@ -80,7 +98,6 @@ export default function DashboardScreen() {
 
         <Card style={styles.summaryCard}>
           <View style={styles.summaryGrid}>
-            <SummaryItem label="Bikes" value={totalBikes.toString()} colors={colors} />
             <SummaryItem label="Schedules" value={totalActiveSchedules.toString()} colors={colors} />
             <SummaryItem label="Overdue" value={overdueCount.toString()} color={colors.red} colors={colors} />
             <SummaryItem label="Due Soon" value={dueSoonCount.toString()} color={colors.amber} colors={colors} />
@@ -96,9 +113,9 @@ export default function DashboardScreen() {
           />
         ) : (
           <>
-            {renderSection('OVERDUE', data?.overdue ?? [], colors)}
-            {renderSection('DUE SOON', data?.dueSoon ?? [], colors)}
-            {renderSection('UPCOMING', data?.upcoming ?? [], colors)}
+            {renderSection('OVERDUE', data?.overdue ?? [], colors, handleCardTap)}
+            {renderSection('DUE SOON', data?.dueSoon ?? [], colors, handleCardTap)}
+            {renderSection('UPCOMING', data?.upcoming ?? [], colors, handleCardTap)}
 
             {overdueCount === 0 && dueSoonCount === 0 && upcomingCount === 0 && (
               <EmptyState icon="✅" title="All caught up!" description="No maintenance items due. You're on top of it." />
@@ -158,7 +175,12 @@ export default function DashboardScreen() {
       </Modal>
 
       <MileageModal visible={mileageVisible} onClose={() => setMileageVisible(false)} />
-      <LogServiceModal visible={logServiceVisible} onClose={() => setLogServiceVisible(false)} />
+      <LogServiceModal
+        visible={logServiceVisible}
+        onClose={() => { setLogServiceVisible(false); setSelectedItem(null); }}
+        preselectedBikeId={selectedItem?.motorcycleId}
+        preselectedScheduleId={selectedItem?.scheduleId}
+      />
     </View>
   );
 }
@@ -180,7 +202,7 @@ const summaryStyles = StyleSheet.create({
   label: { fontFamily: 'Karla_600SemiBold', fontSize: 11, letterSpacing: 1, marginTop: 2 },
 });
 
-function renderSection(title: string, items: DashboardItem[], colors: any) {
+function renderSection(title: string, items: DashboardItem[], colors: any, onItemPress?: (item: DashboardItem) => void) {
   if (items.length === 0) return null;
 
   const status = title === 'OVERDUE' ? 'overdue' as const : title === 'DUE SOON' ? 'due-soon' as const : 'upcoming' as const;
@@ -193,7 +215,7 @@ function renderSection(title: string, items: DashboardItem[], colors: any) {
         <Text style={[sectionStyles.count, { color: colors.textDim }]}>{items.length}</Text>
       </View>
       {items.map((item) => (
-        <TouchableOpacity key={item.scheduleId} activeOpacity={0.7}>
+        <TouchableOpacity key={item.scheduleId} activeOpacity={0.7} onPress={() => onItemPress?.(item)}>
           <Card style={sectionStyles.card}>
             <View style={sectionStyles.cardLeft}>
               <StatusDot status={status} size={8} pulsing={status === 'overdue'} />

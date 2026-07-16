@@ -24,9 +24,11 @@ import type { ApiResponse, ServiceLog, CreateServiceLogRequest } from '../../typ
 interface LogServiceModalProps {
   visible: boolean;
   onClose: () => void;
+  preselectedBikeId?: string;
+  preselectedScheduleId?: string;
 }
 
-export default function LogServiceModal({ visible, onClose }: LogServiceModalProps) {
+export default function LogServiceModal({ visible, onClose, preselectedBikeId, preselectedScheduleId }: LogServiceModalProps) {
   const { colors, borderRadius } = useTheme();
   const insets = useSafeAreaInsets();
   const { bikes, fetchBikes } = useBikeStore();
@@ -45,14 +47,24 @@ export default function LogServiceModal({ visible, onClose }: LogServiceModalPro
   useEffect(() => {
     if (visible) {
       if (bikes.length === 0) fetchBikes();
-      setStep('bike');
-      setSelectedBikeId(null);
-      setSelectedScheduleId(null);
       setDateOfService(new Date().toISOString().split('T')[0]);
       setMileageAtService('');
       setNotes('');
+      if (preselectedBikeId && preselectedScheduleId) {
+        setSelectedBikeId(preselectedBikeId);
+        setSelectedScheduleId(preselectedScheduleId);
+        setStep('form');
+      } else if (preselectedBikeId) {
+        setSelectedBikeId(preselectedBikeId);
+        setSelectedScheduleId(null);
+        setStep('task');
+      } else {
+        setSelectedBikeId(null);
+        setSelectedScheduleId(null);
+        setStep('bike');
+      }
     }
-  }, [visible]);
+  }, [visible, preselectedBikeId, preselectedScheduleId]);
 
   useEffect(() => {
     if (selectedBikeId && !scheduleMap[selectedBikeId]) {
