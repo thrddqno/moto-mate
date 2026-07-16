@@ -178,6 +178,7 @@ a {
 
 .icon-button {
   display: inline-grid;
+  flex: 0 0 auto;
   width: 44px;
   height: 44px;
   place-items: center;
@@ -185,6 +186,14 @@ a {
   border-radius: 999px;
   color: var(--color-amber);
   background: var(--color-surface);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.add-plus {
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1;
 }
 
 .card {
@@ -329,6 +338,36 @@ a {
 .button--ghost {
   color: var(--color-text);
   background: var(--color-surface-elevated);
+}
+
+.button--danger {
+  color: #fff;
+  background: var(--color-red);
+}
+
+.dashboard-page {
+  display: flex;
+  height: 100svh;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.dashboard-page .top-bar,
+.dashboard-page .summary-card {
+  flex: 0 0 auto;
+}
+
+.dashboard-page .summary-card {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
+
+.dashboard-entries {
+  min-height: 0;
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding-bottom: 112px;
 }
 
 .hero-panel {

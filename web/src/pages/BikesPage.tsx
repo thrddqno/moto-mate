@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import { QuickActionFab } from '../components/actions/QuickActionFab'
 import { EmptyState } from '../components/ui/EmptyState'
 import { useBikeStore } from '../stores/bikeStore'
 import { formatMileage } from '../utils/format'
@@ -18,7 +19,7 @@ export default function BikesPage() {
           <p className="eyebrow">Garage</p>
           <h1 className="page-title">MY BIKES</h1>
         </div>
-        <Link className="icon-button" to="/bikes/new" aria-label="Add bike">
+        <Link className="icon-button add-plus" to="/bikes/new" aria-label="Add bike">
           +
         </Link>
       </header>
@@ -62,6 +63,7 @@ export default function BikesPage() {
           ) : null}
         </div>
       )}
+      <QuickActionFab />
     </main>
   )
 }

@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import { QuickActionFab } from '../components/actions/QuickActionFab'
 import { EmptyState } from '../components/ui/EmptyState'
 import { StatusSection } from '../components/ui/StatusSection'
 import { useAuth } from '../context/AuthContext'
@@ -23,7 +24,7 @@ export default function DashboardPage() {
   const upcoming = dashboard?.upcoming ?? []
 
   return (
-    <main className="page">
+    <main className="page dashboard-page">
       <header className="top-bar">
         <div>
           <p className="eyebrow">{displayName ? `Ready, ${displayName}` : 'Dashboard'}</p>
@@ -51,43 +52,46 @@ export default function DashboardPage() {
         </div>
       </section>
 
-      {loading && !dashboard ? (
-        <div style={{ marginTop: 24 }}>
-          <EmptyState icon="🏍" title="Loading dashboard" description="Checking all bikes for due maintenance." />
-        </div>
-      ) : error && !dashboard ? (
-        <div style={{ marginTop: 24 }}>
-          <EmptyState icon="⚠" title="Could not load dashboard" description={error} />
-          <div className="button-row">
-            <button className="button" onClick={() => void fetchDashboard()} type="button">
-              Try Again
-            </button>
+      <section className="dashboard-entries" aria-label="Maintenance entries">
+        {loading && !dashboard ? (
+          <div style={{ marginTop: 24 }}>
+            <EmptyState icon="🏍" title="Loading dashboard" description="Checking all bikes for due maintenance." />
           </div>
-        </div>
-      ) : totalBikes === 0 ? (
-        <div style={{ marginTop: 24 }}>
-          <EmptyState
-            icon="🏍"
-            title="Add your first bike"
-            description="Once a motorcycle is added, due maintenance will appear here."
-          />
-          <div className="button-row">
-            <Link className="button" to="/bikes/new">
-              Add Bike
-            </Link>
+        ) : error && !dashboard ? (
+          <div style={{ marginTop: 24 }}>
+            <EmptyState icon="⚠" title="Could not load dashboard" description={error} />
+            <div className="button-row">
+              <button className="button" onClick={() => void fetchDashboard()} type="button">
+                Try Again
+              </button>
+            </div>
           </div>
-        </div>
-      ) : overdue.length === 0 && dueSoon.length === 0 && upcoming.length === 0 ? (
-        <div style={{ marginTop: 24 }}>
-          <EmptyState icon="✅" title="All caught up" description="No maintenance items are due right now." />
-        </div>
-      ) : (
-        <>
-          <StatusSection title="Overdue" status="OVERDUE" items={overdue} />
-          <StatusSection title="Due Soon" status="DUE_SOON" items={dueSoon} />
-          <StatusSection title="Upcoming" status="UPCOMING" items={upcoming} />
-        </>
-      )}
+        ) : totalBikes === 0 ? (
+          <div style={{ marginTop: 24 }}>
+            <EmptyState
+              icon="🏍"
+              title="Add your first bike"
+              description="Once a motorcycle is added, due maintenance will appear here."
+            />
+            <div className="button-row">
+              <Link className="button" to="/bikes/new">
+                Add Bike
+              </Link>
+            </div>
+          </div>
+        ) : overdue.length === 0 && dueSoon.length === 0 && upcoming.length === 0 ? (
+          <div style={{ marginTop: 24 }}>
+            <EmptyState icon="✅" title="All caught up" description="No maintenance items are due right now." />
+          </div>
+        ) : (
+          <>
+            <StatusSection title="Overdue" status="OVERDUE" items={overdue} />
+            <StatusSection title="Due Soon" status="DUE_SOON" items={dueSoon} />
+            <StatusSection title="Upcoming" status="UPCOMING" items={upcoming} />
+          </>
+        )}
+      </section>
+      <QuickActionFab />
     </main>
   )
 }

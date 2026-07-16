@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
+import { QuickActionFab } from '../components/actions/QuickActionFab'
+import { EditBikeModal } from '../components/bikes/EditBikeModal'
 import { EmptyState } from '../components/ui/EmptyState'
 import { useBikeStore } from '../stores/bikeStore'
 import type { MotorcycleDetail } from '../types'
@@ -7,11 +9,11 @@ import { formatDate, formatMileage } from '../utils/format'
 
 export default function BikeDetailPage() {
   const { bikeId } = useParams()
-  const navigate = useNavigate()
-  const { deleteBike, getBikeDetail } = useBikeStore()
+  const { getBikeDetail } = useBikeStore()
   const [bike, setBike] = useState<MotorcycleDetail | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [editOpen, setEditOpen] = useState(false)
 
   useEffect(() => {
     let cancelled = false
@@ -39,11 +41,10 @@ export default function BikeDetailPage() {
     }
   }, [bikeId, getBikeDetail])
 
-  async function handleDelete() {
-    if (!bikeId || !bike) return
-    if (!window.confirm(`Remove ${bike.name}? This will hide the bike from your garage.`)) return
-    await deleteBike(bikeId)
-    navigate('/bikes', { replace: true })
+  async function refreshBike() {
+    if (!bikeId) return
+    const detail = await getBikeDetail(bikeId)
+    if (detail) setBike(detail)
   }
 
   if (loading) {
@@ -73,9 +74,9 @@ export default function BikeDetailPage() {
         <Link className="icon-button" to="/bikes" aria-label="Back to bikes">
           ‹
         </Link>
-        <Link className="icon-button" to={`/bikes/${bike.id}/edit`} aria-label="Edit bike">
+        <button className="icon-button" onClick={() => setEditOpen(true)} type="button" aria-label="Edit bike">
           ✎
-        </Link>
+        </button>
       </header>
 
       <section className="bike-hero card">
@@ -117,11 +118,8 @@ export default function BikeDetailPage() {
         )}
       </section>
 
-      <div className="button-row danger-zone">
-        <button className="button button--ghost" onClick={handleDelete} type="button">
-          Delete Bike
-        </button>
-      </div>
+      <QuickActionFab bikeId={bike.id} />
+      <EditBikeModal bike={bike} open={editOpen} onClose={() => setEditOpen(false)} onSaved={() => void refreshBike()} />
     </main>
   )
 }
