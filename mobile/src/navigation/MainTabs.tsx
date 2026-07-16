@@ -1,6 +1,7 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import DashboardStack from './DashboardStack';
 import BikesStack from './BikesStack';
 import HistoryStack from './HistoryStack';
@@ -18,6 +19,7 @@ const Tab = createBottomTabNavigator<MainTabParamList>();
 
 export default function MainTabs() {
   const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
 
   return (
     <Tab.Navigator
@@ -27,9 +29,9 @@ export default function MainTabs() {
           backgroundColor: colors.surface,
           borderTopColor: colors.border,
           borderTopWidth: 1,
-          height: 64,
-          paddingBottom: 8,
-          paddingTop: 8,
+          height: 56 + insets.bottom,
+          paddingBottom: insets.bottom,
+          paddingTop: 6,
         },
         tabBarActiveTintColor: colors.amber,
         tabBarInactiveTintColor: colors.textDim,
@@ -37,6 +39,9 @@ export default function MainTabs() {
           fontFamily: 'Karla_600SemiBold',
           fontSize: 11,
           letterSpacing: 0.5,
+        },
+        tabBarItemStyle: {
+          paddingVertical: 2,
         },
       }}
     >
@@ -46,7 +51,7 @@ export default function MainTabs() {
         options={{
           tabBarLabel: 'Dashboard',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="speedometer" size={size} color={color} />
+            <Ionicons name="speedometer" size={22} color={color} />
           ),
         }}
       />
@@ -56,7 +61,7 @@ export default function MainTabs() {
         options={{
           tabBarLabel: 'My Bikes',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="bicycle" size={size} color={color} />
+            <Ionicons name="bicycle" size={22} color={color} />
           ),
         }}
       />
@@ -66,7 +71,7 @@ export default function MainTabs() {
         options={{
           tabBarLabel: 'History',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="time" size={size} color={color} />
+            <Ionicons name="time" size={22} color={color} />
           ),
         }}
       />
@@ -76,7 +81,7 @@ export default function MainTabs() {
         options={{
           tabBarLabel: 'Settings',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="settings" size={size} color={color} />
+            <Ionicons name="settings" size={22} color={color} />
           ),
         }}
       />

@@ -4,12 +4,15 @@ import BikeListScreen from '../screens/bikes/BikeListScreen';
 import AddBikeScreen from '../screens/bikes/AddBikeScreen';
 import EditBikeScreen from '../screens/bikes/EditBikeScreen';
 import BikeDetailScreen from '../screens/bikes/BikeDetailScreen';
+import ScheduleFormScreen from '../screens/schedules/ScheduleFormScreen';
+import type { Schedule } from '../types';
 
 export type BikesStackParamList = {
   BikeList: undefined;
   AddBike: undefined;
   EditBike: { bikeId: string };
   BikeDetail: { bikeId: string };
+  ScheduleForm: { bikeId: string; schedule?: Schedule };
 };
 
 const Stack = createNativeStackNavigator<BikesStackParamList>();
@@ -26,6 +29,11 @@ export default function BikesStack() {
       <Stack.Screen name="AddBike" component={AddBikeScreen} />
       <Stack.Screen name="EditBike" component={EditBikeScreen} />
       <Stack.Screen name="BikeDetail" component={BikeDetailScreen} />
+      <Stack.Screen
+        name="ScheduleForm"
+        component={ScheduleFormScreen}
+        options={{ presentation: 'modal', animation: 'slide_from_bottom' }}
+      />
     </Stack.Navigator>
   );
 }

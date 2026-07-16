@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -7,6 +7,7 @@ import {
   RefreshControl,
   TouchableOpacity,
   StatusBar,
+  Modal,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -14,51 +15,34 @@ import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
 import { Card } from '../../components/ui/Card';
 import { StatusDot } from '../../components/ui/StatusDot';
-import { MileageDisplay } from '../../components/ui/MileageDisplay';
 import { LoadingState } from '../../components/ui/LoadingState';
 import { ErrorState } from '../../components/ui/ErrorState';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { Button } from '../../components/ui/Button';
-import api from '../../services/api';
-import { formatDaysRemaining, formatMilesRemaining, formatDate } from '../../utils/format';
+import LogServiceModal from '../../components/service/LogServiceModal';
+import MileageModal from '../../components/dashboard/MileageModal';
+import { useDashboardStore } from '../../stores/dashboardStore';
+import { formatDaysRemaining, formatMilesRemaining } from '../../utils/format';
 import { getStatusColor } from '../../utils/calculation';
-import type { ApiResponse, DashboardResponse, DashboardItem } from '../../types';
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import type { DashboardStackParamList } from '../../navigation/DashboardStack';
+import type { DashboardItem } from '../../types';
 
-type Props = NativeStackScreenProps<DashboardStackParamList, 'Dashboard'>;
-
-export default function DashboardScreen({ navigation }: Props) {
+export default function DashboardScreen() {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const { profile } = useAuth();
-  const [data, setData] = useState<DashboardResponse | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { data, loading, error, fetchDashboard, lastFetched } = useDashboardStore();
   const [refreshing, setRefreshing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [showActions, setShowActions] = useState(false);
+  const [logServiceVisible, setLogServiceVisible] = useState(false);
+  const [mileageVisible, setMileageVisible] = useState(false);
 
-  const fetchDashboard = useCallback(async () => {
-    try {
-      setError(null);
-      const res = await api.get<ApiResponse<DashboardResponse>>('/dashboard');
-      if (res.data.success && res.data.data) {
-        setData(res.data.data);
-      }
-    } catch (err: any) {
-      setError(err?.message || 'Failed to load dashboard');
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
+  useEffect(() => {
+    if (!lastFetched) fetchDashboard();
   }, []);
-
-  React.useEffect(() => {
-    fetchDashboard();
-  }, [fetchDashboard]);
 
   function onRefresh() {
     setRefreshing(true);
-    fetchDashboard();
+    fetchDashboard().finally(() => setRefreshing(false));
   }
 
   if (loading && !data) return <LoadingState message="Loading dashboard..." />;
@@ -77,11 +61,7 @@ export default function DashboardScreen({ navigation }: Props) {
       <ScrollView
         contentContainerStyle={styles.scroll}
         refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            tintColor={colors.amber}
-          />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.amber} />
         }
       >
         <View style={styles.header}>
@@ -93,7 +73,6 @@ export default function DashboardScreen({ navigation }: Props) {
           </View>
           <TouchableOpacity
             style={[styles.profileBtn, { backgroundColor: colors.surface, borderColor: colors.border }]}
-            onPress={() => navigation.getParent()?.navigate('SettingsTab')}
           >
             <Ionicons name="person" size={20} color={colors.amber} />
           </TouchableOpacity>
@@ -101,28 +80,10 @@ export default function DashboardScreen({ navigation }: Props) {
 
         <Card style={styles.summaryCard}>
           <View style={styles.summaryGrid}>
-            <SummaryItem
-              label="Bikes"
-              value={totalBikes.toString()}
-              colors={colors}
-            />
-            <SummaryItem
-              label="Schedules"
-              value={totalActiveSchedules.toString()}
-              colors={colors}
-            />
-            <SummaryItem
-              label="Overdue"
-              value={overdueCount.toString()}
-              color={colors.red}
-              colors={colors}
-            />
-            <SummaryItem
-              label="Due Soon"
-              value={dueSoonCount.toString()}
-              color={colors.amber}
-              colors={colors}
-            />
+            <SummaryItem label="Bikes" value={totalBikes.toString()} colors={colors} />
+            <SummaryItem label="Schedules" value={totalActiveSchedules.toString()} colors={colors} />
+            <SummaryItem label="Overdue" value={overdueCount.toString()} color={colors.red} colors={colors} />
+            <SummaryItem label="Due Soon" value={dueSoonCount.toString()} color={colors.amber} colors={colors} />
           </View>
         </Card>
 
@@ -132,47 +93,80 @@ export default function DashboardScreen({ navigation }: Props) {
             title="No bikes yet"
             description="Add your first motorcycle to start tracking maintenance"
             actionLabel="Add a Bike"
-            onAction={() => navigation.getParent()?.navigate('BikesTab', { screen: 'AddBike' })}
           />
         ) : (
           <>
-            {renderSection('OVERDUE', data?.overdue ?? [], colors, navigation)}
-            {renderSection('DUE SOON', data?.dueSoon ?? [], colors, navigation)}
-            {renderSection('UPCOMING', data?.upcoming ?? [], colors, navigation)}
+            {renderSection('OVERDUE', data?.overdue ?? [], colors)}
+            {renderSection('DUE SOON', data?.dueSoon ?? [], colors)}
+            {renderSection('UPCOMING', data?.upcoming ?? [], colors)}
 
             {overdueCount === 0 && dueSoonCount === 0 && upcomingCount === 0 && (
-              <EmptyState
-                icon="✅"
-                title="All caught up!"
-                description="No maintenance items due. You're on top of it."
-              />
+              <EmptyState icon="✅" title="All caught up!" description="No maintenance items due. You're on top of it." />
             )}
           </>
         )}
       </ScrollView>
+
+      <TouchableOpacity
+        style={[styles.fab, { backgroundColor: colors.amber }]}
+        onPress={() => setShowActions(true)}
+        activeOpacity={0.8}
+      >
+        <Ionicons name="add" size={28} color={colors.black} />
+      </TouchableOpacity>
+
+      <Modal visible={showActions} transparent animationType="fade">
+        <TouchableOpacity
+          style={styles.actionOverlay}
+          activeOpacity={1}
+          onPress={() => setShowActions(false)}
+        >
+          <View style={[styles.actionSheet, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <Text style={[styles.actionSheetTitle, { color: colors.text }]}>Quick Action</Text>
+
+            <TouchableOpacity
+              style={[styles.actionRow, { borderBottomColor: colors.border }]}
+              onPress={() => { setShowActions(false); setMileageVisible(true); }}
+            >
+              <View style={[styles.actionIcon, { backgroundColor: colors.blueDim }]}>
+                <Ionicons name="speedometer" size={22} color={colors.blue} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.actionLabel, { color: colors.text }]}>Log Mileage</Text>
+                <Text style={[styles.actionHint, { color: colors.textDim }]}>
+                  Update your bike's current mileage
+                </Text>
+              </View>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.actionRow}
+              onPress={() => { setShowActions(false); setLogServiceVisible(true); }}
+            >
+              <View style={[styles.actionIcon, { backgroundColor: colors.amberDim }]}>
+                <Ionicons name="wrench" size={22} color={colors.amber} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.actionLabel, { color: colors.text }]}>Log Service</Text>
+                <Text style={[styles.actionHint, { color: colors.textDim }]}>
+                  Record a maintenance service
+                </Text>
+              </View>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
+
+      <MileageModal visible={mileageVisible} onClose={() => setMileageVisible(false)} />
+      <LogServiceModal visible={logServiceVisible} onClose={() => setLogServiceVisible(false)} />
     </View>
   );
 }
 
-function SummaryItem({
-  label,
-  value,
-  color,
-  colors: c,
-}: {
-  label: string;
-  value: string;
-  color?: string;
-  colors: any;
-}) {
+function SummaryItem({ label, value, color, colors: c }: { label: string; value: string; color?: string; colors: any }) {
   return (
     <View style={summaryStyles.item}>
-      <Text
-        style={[
-          summaryStyles.value,
-          { color: color || c.text, fontFamily: 'JetBrainsMono_700Bold' },
-        ]}
-      >
+      <Text style={[summaryStyles.value, { color: color || c.text, fontFamily: 'JetBrainsMono_700Bold' }]}>
         {value}
       </Text>
       <Text style={[summaryStyles.label, { color: c.textDim }]}>{label}</Text>
@@ -186,66 +180,34 @@ const summaryStyles = StyleSheet.create({
   label: { fontFamily: 'Karla_600SemiBold', fontSize: 11, letterSpacing: 1, marginTop: 2 },
 });
 
-function renderSection(
-  title: string,
-  items: DashboardItem[],
-  colors: any,
-  navigation: any,
-) {
+function renderSection(title: string, items: DashboardItem[], colors: any) {
   if (items.length === 0) return null;
 
-  const status = title === 'OVERDUE' ? 'overdue' : title === 'DUE SOON' ? 'due-soon' : 'upcoming';
+  const status = title === 'OVERDUE' ? 'overdue' as const : title === 'DUE SOON' ? 'due-soon' as const : 'upcoming' as const;
 
   return (
     <View style={sectionStyles.section}>
       <View style={sectionStyles.header}>
         <StatusDot status={status} />
-        <Text style={[sectionStyles.title, { color: colors.text, marginLeft: 8 }]}>
-          {title}
-        </Text>
-        <Text style={[sectionStyles.count, { color: colors.textDim }]}>
-          {items.length}
-        </Text>
+        <Text style={[sectionStyles.title, { color: colors.text, marginLeft: 8 }]}>{title}</Text>
+        <Text style={[sectionStyles.count, { color: colors.textDim }]}>{items.length}</Text>
       </View>
       {items.map((item) => (
-        <TouchableOpacity
-          key={item.scheduleId}
-          activeOpacity={0.7}
-          onPress={() =>
-            navigation.navigate('LogService', {
-              scheduleId: item.scheduleId,
-              motorcycleId: item.motorcycleId,
-            })
-          }
-        >
+        <TouchableOpacity key={item.scheduleId} activeOpacity={0.7}>
           <Card style={sectionStyles.card}>
             <View style={sectionStyles.cardLeft}>
               <StatusDot status={status} size={8} pulsing={status === 'overdue'} />
             </View>
             <View style={sectionStyles.cardContent}>
-              <Text style={[sectionStyles.taskName, { color: colors.text }]}>
-                {item.templateName}
-              </Text>
-              <Text style={[sectionStyles.bikeName, { color: colors.textDim }]}>
-                {item.motorcycleName}
-              </Text>
+              <Text style={[sectionStyles.taskName, { color: colors.text }]}>{item.templateName}</Text>
+              <Text style={[sectionStyles.bikeName, { color: colors.textDim }]}>{item.motorcycleName}</Text>
               {item.milesRemaining != null && (
-                <Text
-                  style={[
-                    sectionStyles.dueText,
-                    { color: getStatusColor(item.status) },
-                  ]}
-                >
+                <Text style={[sectionStyles.dueText, { color: getStatusColor(item.status) }]}>
                   {formatMilesRemaining(item.milesRemaining)}
                 </Text>
               )}
               {item.daysRemaining != null && (
-                <Text
-                  style={[
-                    sectionStyles.dueText,
-                    { color: getStatusColor(item.status) },
-                  ]}
-                >
+                <Text style={[sectionStyles.dueText, { color: getStatusColor(item.status) }]}>
                   {formatDaysRemaining(item.daysRemaining)}
                 </Text>
               )}
@@ -262,17 +224,8 @@ const sectionStyles = StyleSheet.create({
   section: { marginTop: 24 },
   header: { flexDirection: 'row', alignItems: 'center', marginBottom: 12, paddingHorizontal: 4 },
   title: { fontFamily: 'Karla_700Bold', fontSize: 14, letterSpacing: 1.5 },
-  count: {
-    fontFamily: 'JetBrainsMono_700Bold',
-    fontSize: 12,
-    marginLeft: 8,
-  },
-  card: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 14,
-    marginBottom: 8,
-  },
+  count: { fontFamily: 'JetBrainsMono_700Bold', fontSize: 12, marginLeft: 8 },
+  card: { flexDirection: 'row', alignItems: 'center', paddingVertical: 14, marginBottom: 8 },
   cardLeft: { width: 20, alignItems: 'center' },
   cardContent: { flex: 1, marginLeft: 8 },
   taskName: { fontFamily: 'Karla_600SemiBold', fontSize: 15 },
@@ -282,7 +235,7 @@ const sectionStyles = StyleSheet.create({
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  scroll: { paddingHorizontal: 16, paddingBottom: 32 },
+  scroll: { paddingHorizontal: 16, paddingBottom: 96 },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -302,4 +255,60 @@ const styles = StyleSheet.create({
   },
   summaryCard: { marginBottom: 8 },
   summaryGrid: { flexDirection: 'row', justifyContent: 'space-between' },
+  fab: {
+    position: 'absolute',
+    bottom: 24,
+    right: 20,
+    width: 56,
+    height: 56,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#FFB300',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  actionOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    justifyContent: 'flex-end',
+    paddingHorizontal: 16,
+    paddingBottom: 32,
+  },
+  actionSheet: {
+    borderRadius: 16,
+    borderWidth: 1,
+    padding: 20,
+  },
+  actionSheetTitle: {
+    fontFamily: 'Audiowide_400Regular',
+    fontSize: 18,
+    letterSpacing: 1,
+    marginBottom: 16,
+  },
+  actionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 14,
+    gap: 14,
+    borderBottomWidth: 1,
+  },
+  actionIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  actionLabel: {
+    fontFamily: 'Karla_600SemiBold',
+    fontSize: 16,
+  },
+  actionHint: {
+    fontFamily: 'Karla_400Regular',
+    fontSize: 12,
+    marginTop: 2,
+  },
 });
