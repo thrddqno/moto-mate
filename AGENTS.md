@@ -11,9 +11,7 @@
 - `backend/` is the real app today: Spring Boot API, Flyway migrations, Firebase auth, reminder scheduler, and unit tests all live here.
 - Backend Java package names are under `com.thrddqno.motomate`, not `com.motomate` from stale planning docs.
 - `web/` exists but is still close to the default Vite React scaffold. Do not assume product features already exist there.
-- `mobile/` is an older Expo app. Treat it as reference material only unless the user explicitly asks for native/mobile work.
-- If you do work in `mobile/`, read `mobile/AGENTS.md` first; it points to the exact Expo docs version to follow.
-- There is no root workspace runner. Run commands inside `backend/`, `web/`, or `mobile/` directly.
+- There is no root workspace runner. Run commands inside `backend/` or `web/` directly.
 
 ## Commands
 
@@ -65,5 +63,5 @@
 ## Practical Workflow
 
 - Read `PLAN.md` before implementing product changes, but confirm routes, env vars, and behavior from code first.
-- Prefer small diffs in the active package instead of cross-cutting cleanup across `backend/`, `web/`, and `mobile/`.
+- Prefer small diffs in the active package instead of cross-cutting cleanup across `backend/` and `web/`.
 - If you touch API contracts, migrations, or auth flow, verify against the live backend codepaths, not the aspirational root README.
