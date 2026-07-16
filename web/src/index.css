@@ -438,6 +438,12 @@ a {
   background: var(--color-surface-elevated);
 }
 
+.form-stack input[type='checkbox'] {
+  width: 20px;
+  min-height: 20px;
+  accent-color: var(--color-amber);
+}
+
 .form-card {
   padding: 16px;
 }
@@ -446,6 +452,36 @@ a {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
+}
+
+.checkbox-row {
+  display: flex !important;
+  grid-template-columns: none !important;
+  align-items: center;
+  gap: 10px !important;
+}
+
+.card-actions {
+  display: grid;
+  gap: 6px;
+  justify-items: end;
+}
+
+.card-actions a,
+.card-actions button {
+  border: 0;
+  padding: 0;
+  color: var(--color-amber);
+  background: transparent;
+  font-size: 12px;
+  font-weight: 800;
+  text-decoration: none;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.card-actions button {
+  color: var(--color-red);
 }
 
 .form-stack textarea {

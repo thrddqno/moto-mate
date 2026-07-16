@@ -9,6 +9,8 @@ import BikesPage from './pages/BikesPage'
 import HistoryPage from './pages/HistoryPage'
 import SettingsPage from './pages/SettingsPage'
 import ProfileSetupPage from './pages/ProfileSetupPage'
+import ScheduleFormPage from './pages/ScheduleFormPage'
+import SchedulesPage from './pages/SchedulesPage'
 import SignInPage from './pages/SignInPage'
 import SignUpPage from './pages/SignUpPage'
 import WelcomePage from './pages/WelcomePage'
@@ -67,6 +69,30 @@ const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             <BikeFormPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'bikes/:bikeId/schedules',
+        element: (
+          <ProtectedRoute>
+            <SchedulesPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'bikes/:bikeId/schedules/new',
+        element: (
+          <ProtectedRoute>
+            <ScheduleFormPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'bikes/:bikeId/schedules/:scheduleId/edit',
+        element: (
+          <ProtectedRoute>
+            <ScheduleFormPage />
           </ProtectedRoute>
         ),
       },

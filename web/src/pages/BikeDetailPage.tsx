@@ -93,6 +93,12 @@ export default function BikeDetailPage() {
         <div className="card stat-card"><strong>{bike.totalSchedules}</strong><span>Schedules</span></div>
       </section>
 
+      <div className="button-row" style={{ marginBottom: 22 }}>
+        <Link className="button" to={`/bikes/${bike.id}/schedules`}>
+          Manage Schedules
+        </Link>
+      </div>
+
       <section>
         <h2 className="section-heading">Recent Service</h2>
         {bike.recentServiceLogs.length === 0 ? (
